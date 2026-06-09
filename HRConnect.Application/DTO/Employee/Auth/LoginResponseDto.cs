@@ -1,0 +1,19 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace HRConnect.Application.DTO.Employee.Auth
+{
+    public class LoginResponseDto
+    {
+        public string Token { get; set; } = string.Empty;
+
+        public string FullName { get; set; } = string.Empty;
+
+        public string Email { get; set; } = string.Empty;
+
+        public bool IsAdmin { get; set; }
+    }
+}
