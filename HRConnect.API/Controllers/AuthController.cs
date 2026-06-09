@@ -1,5 +1,5 @@
 ﻿using HRConnect.API.JWTService;
-using HRConnect.Application.DTO.Employee.Auth;
+using HRConnect.Application.DTO.Auth;
 using HRConnect.Domain.Entities;
 using HRConnect.Infrastructure.Data;
 using Microsoft.AspNetCore.Http;

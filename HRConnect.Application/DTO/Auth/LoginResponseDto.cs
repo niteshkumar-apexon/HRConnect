@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HRConnect.Application.DTO.Employee.Auth
+namespace HRConnect.Application.DTO.Auth
 {
     public class LoginResponseDto
     {

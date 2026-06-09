@@ -1,13 +1,23 @@
+using AutoMapper;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using HRConnect.API.JWTService;
 using HRConnect.API.Middleware;
+using HRConnect.API.Models;
 using HRConnect.Application.Interfaces.Repositories;
 using HRConnect.Application.Interfaces.Services;
+using HRConnect.Application.Mappings;
+using HRConnect.Application.Validators;
 using HRConnect.Infrastructure.Data;
 using HRConnect.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+
+
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,6 +63,27 @@ builder.Services.AddSwaggerGen(options =>
         });
 });
 
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errors = context.ModelState
+            .Values
+            .SelectMany(v => v.Errors)
+            .Select(x => x.ErrorMessage)
+            .ToList(); 
+
+        return new BadRequestObjectResult(
+            new ErrorResponse
+            {
+                Timestamp = DateTime.UtcNow,
+                Path = context.HttpContext.Request.Path,
+                Error = "Validation Error",
+                Message = string.Join(", ", errors)
+            });
+    };
+});
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(
@@ -82,6 +113,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
 });
 
+builder.Services.AddAutoMapper(typeof(EmployeeProfile));
+builder.Services.AddFluentValidationAutoValidation();
+
+builder.Services.AddValidatorsFromAssemblyContaining<LoginValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterValidator>();
+
+builder.Services.AddValidatorsFromAssemblyContaining<CreateEmployeeValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<UpdateEmployeeValidator>();
+
 builder.Services.AddAuthorization();
 
 builder.Services.AddCors(options =>
@@ -96,6 +136,11 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Below 3 lines of code will provide the invalid mapping
+var scope = app.Services.CreateScope();
+var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
+mapper.ConfigurationProvider.AssertConfigurationIsValid();
 
 app.UseSwagger();
 

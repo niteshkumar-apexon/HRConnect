@@ -1,4 +1,5 @@
 ﻿using HRConnect.API.Models;
+using HRConnect.Application.Exceptions;
 using System.Net;
 using System.Text.Json;
 
@@ -13,7 +14,7 @@ namespace HRConnect.API.Middleware
             _next = next;
         }
 
-        public async Task InvokeAsyn(HttpContext httpContext)
+        public async Task InvokeAsync(HttpContext httpContext)
         {
             try
             {
@@ -25,15 +26,14 @@ namespace HRConnect.API.Middleware
             }
         }
 
-        private static async Task HandleExceptionAsync(
-        HttpContext context,
-        Exception exception)
+        private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             var response = new ErrorResponse
             {
                 Timestamp = DateTime.UtcNow,
                 Path = context.Request.Path,
-                Message = exception.Message
+                //Message = exception.Message
+                Message = exception.InnerException?.Message ?? exception.Message
             };
 
             switch (exception)
