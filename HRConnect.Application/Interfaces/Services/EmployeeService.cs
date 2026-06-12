@@ -111,9 +111,7 @@ namespace HRConnect.Application.Interfaces.Services
         public async Task<List<EmployeeResponseDto>> SearchEmployeesAsync(string? search, string? department, string? designation)
         {
             var employees = await _repository.SearchAsync(
-                search,
-                department,
-                designation);
+                search, department, designation);
 
             //return employees.Select(x => new EmployeeResponseDto
             //{

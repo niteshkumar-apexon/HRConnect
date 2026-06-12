@@ -4,13 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HRConnect.Domain.Entities
+namespace HRConnect.Application.DTO.Leave
 {
-    public class LeaveRequest
+    public class LeaveResponseDto
     {
         public Guid Id { get; set; }
 
         public Guid EmployeeId { get; set; }
+
+        public string EmployeeName { get; set; } = string.Empty;
 
         public string LeaveType { get; set; } = string.Empty;
 
@@ -18,12 +20,12 @@ namespace HRConnect.Domain.Entities
 
         public DateTime EndDate { get; set; }
 
-        public string Status { get; set; } = "Pending";
+        public int TotalDays { get; set; }
 
         public string Reason { get; set; } = string.Empty;
 
-        public DateTime CreatedOn { get; set; }
+        public string Status { get; set; } = string.Empty;
 
-        public Employee Employee { get; set; } = null!;
+        public DateTime CreatedOn { get; set; }
     }
 }

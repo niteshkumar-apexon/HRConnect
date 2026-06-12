@@ -1,4 +1,5 @@
 ﻿using HRConnect.Application.DTO.Employee;
+using HRConnect.Application.DTO.Leave;
 using HRConnect.Application.Interfaces.Services;
 using HRConnect.Domain.Entities;
 using HRConnect.Infrastructure.Data;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace HRConnect.API.Controllers
 {
@@ -15,11 +17,12 @@ namespace HRConnect.API.Controllers
     public class EmployeesController : ControllerBase
     {
         private readonly IEmployeeService _service;
+        private readonly ILeaveService _leaveService;
 
-        public EmployeesController(
-            IEmployeeService service)
+        public EmployeesController(IEmployeeService service, ILeaveService leaveService)
         {
             _service = service;
+            _leaveService = leaveService;
         }
 
         //[HttpGet]
