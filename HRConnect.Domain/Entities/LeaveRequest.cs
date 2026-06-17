@@ -22,7 +22,7 @@ namespace HRConnect.Domain.Entities
 
         public string Reason { get; set; } = string.Empty;
 
-        public DateTime CreatedOn { get; set; }
+        //public DateTime CreatedOn { get; set; }
 
         public Employee Employee { get; set; } = null!;
     }
