@@ -79,7 +79,7 @@ namespace HRConnect.Application.Interfaces.Services
                 EndDate = dto.EndDate,
                 Reason = dto.Reason,
                 Status = "Pending",
-                CreatedOn = DateTime.UtcNow
+                //CreatedOn = DateTime.UtcNow
             };
 
             await _leaveRepository.CreateAsync(leaveRequest);
