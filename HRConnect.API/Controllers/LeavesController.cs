@@ -54,5 +54,17 @@ namespace HRConnect.API.Controllers
                 Message = "Leave status updated successfully"
             });
         }
+        [Authorize]
+        [HttpGet("dashboard")]
+        public async Task<IActionResult> GetDashboard()
+        {
+            var userId = Guid.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var dashboard =
+                await _leaveService.GetDashboardAsync(userId);
+
+            return Ok(dashboard);
+        }
     }
 }

@@ -20,5 +20,6 @@ namespace HRConnect.Application.Interfaces.Services
         //Task ApproveLeaveAsync(Guid leaveId);
 
         //Task RejectLeaveAsync(Guid leaveId);
+        Task<LeaveDashboardDto> GetDashboardAsync(Guid employeeId);
     }
 }
