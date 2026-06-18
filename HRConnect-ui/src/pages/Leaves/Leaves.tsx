@@ -21,7 +21,7 @@ const Leaves = () => {
   const [firstDaySecondHalf, setFirstDaySecondHalf] = useState(false);
   const [lastDayFirstHalf, setLastDayFirstHalf] = useState(false);
 
-  const [attachments, setAttachments] = useState<File[]>([]);
+
   const [submitting, setSubmitting] = useState(false);
 
   const fetchLeaves = async () => {
@@ -321,28 +321,7 @@ const Leaves = () => {
           />
         </div>
 
-        <div
-          className="field"
-          style={{ marginTop: "20px" }}
-        >
-          <label className="label">
-            Please attach supporting documents
-            (Optional) - Max 4 files
-          </label>
-
-          <input
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
-            multiple
-            onChange={(e) =>
-              setAttachments(
-                Array.from(
-                  e.target.files || []
-                ).slice(0, 4)
-              )
-            }
-          />
-        </div>
+       
       </div>
 
       {/* Leave History */}
