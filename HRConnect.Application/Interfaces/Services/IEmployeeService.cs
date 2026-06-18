@@ -13,7 +13,7 @@ namespace HRConnect.Application.Interfaces.Services
 
         Task<EmployeeResponseDto?> GetEmployeeByIdAsync(Guid id);
 
-        Task CreateEmployeeAsync(CreateEmployeeDto dto);
+        Task CreateEmployeeAsync(CreateEmployeeDto dto);        
 
         Task UpdateEmployeeAsync(Guid id, UpdateEmployeeDto dto);
 

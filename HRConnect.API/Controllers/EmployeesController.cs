@@ -1,13 +1,7 @@
 ﻿using HRConnect.Application.DTO.Employee;
-using HRConnect.Application.DTO.Leave;
 using HRConnect.Application.Interfaces.Services;
-using HRConnect.Domain.Entities;
-using HRConnect.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace HRConnect.API.Controllers
 {
@@ -35,6 +29,7 @@ namespace HRConnect.API.Controllers
 
         // If no filters supplied return all employees
 
+
         [HttpGet]
         public async Task<IActionResult> GetEmployees([FromQuery] string? search, [FromQuery] string? department, [FromQuery] string? designation)
         {
@@ -57,14 +52,16 @@ namespace HRConnect.API.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Create(CreateEmployeeDto dto)
         {
             await _service.CreateEmployeeAsync(dto);
 
-            return Ok("Employee Created");
+            return Ok("Employee Added Successfully");
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id,
                    UpdateEmployeeDto dto)
@@ -74,6 +71,8 @@ namespace HRConnect.API.Controllers
             return Ok("Employee Updated");
         }
 
+
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {

@@ -21,9 +21,15 @@ namespace HRConnect.Domain.Entities
         public string Status { get; set; } = "Pending";
 
         public string Reason { get; set; } = string.Empty;
-
-        //public DateTime CreatedOn { get; set; }
+        public decimal NumberofDays { get; set; }
+        public bool FirstHalf { get; set; }
+        public bool SecondHalf { get; set; }
+        public bool FirstDaySecondHalf { get; set; }
+        public bool LastDayFirstHalf { get; set; }
 
         public Employee Employee { get; set; } = null!;
+
+
+        
     }
 }

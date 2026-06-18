@@ -14,5 +14,7 @@ namespace HRConnect.Application.Interfaces.Repositories
         Task<LeaveBalance?> GetByEmployeeAndTypeAsync(Guid employeeId, string leaveType);
 
         Task UpdateAsync(LeaveBalance balance);
+
+        Task AddRangeAsync(List<LeaveBalance> balances);
     }
 }

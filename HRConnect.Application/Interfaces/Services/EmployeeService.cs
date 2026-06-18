@@ -10,12 +10,15 @@ namespace HRConnect.Application.Interfaces.Services
     {
         private readonly IEmployeeRepository _repository;
         private readonly IMapper _mapper;
+        private readonly ILeaveBalanceRepository _leaveBalanceRepository;
+
 
         public EmployeeService(
-            IEmployeeRepository repository, IMapper mapper  )
+            IEmployeeRepository repository, IMapper mapper, ILeaveBalanceRepository leaveBalanceRepository)
         {
             _repository = repository;
             _mapper = mapper;
+            _leaveBalanceRepository = leaveBalanceRepository;
         }
 
         public async Task<List<EmployeeResponseDto>> GetEmployeesAsync()
@@ -60,20 +63,19 @@ namespace HRConnect.Application.Interfaces.Services
 
         public async Task CreateEmployeeAsync(CreateEmployeeDto dto)
         {
-            //var employee = new Employee
-            //{
-            //    Id = Guid.NewGuid(),
-            //    UserId = dto.UserId,
-            //    Department = dto.Department,
-            //    Designation = dto.Designation,
-            //    JoiningDate = dto.JoiningDate
-            //};
-
             var employee = _mapper.Map<Employee>(dto);
 
             employee.Id = Guid.NewGuid();
 
             await _repository.AddAsync(employee);
+
+            // check if employee has leave balance added
+            var existingBalances = await _leaveBalanceRepository.GetByEmployeeIdAsync(employee.Id);
+
+            if (!existingBalances.Any())
+            {
+                await CreateDefaultLeaveBalances(employee.Id);
+            }
         }
 
         public async Task UpdateEmployeeAsync(Guid id, UpdateEmployeeDto dto)
@@ -113,18 +115,41 @@ namespace HRConnect.Application.Interfaces.Services
             var employees = await _repository.SearchAsync(
                 search, department, designation);
 
-            //return employees.Select(x => new EmployeeResponseDto
-            //{
-            //    Id = x.Id,
-            //    UserId = x.UserId,
-            //    FullName = x.User.FullName,
-            //    Email = x.User.Email,
-            //    Department = x.Department,
-            //    Designation = x.Designation,
-            //    JoiningDate = x.JoiningDate
-            //}).ToList();
-
             return _mapper.Map<List<EmployeeResponseDto>>(employees);
+        }
+
+        private async Task CreateDefaultLeaveBalances(Guid employeeId)
+        {
+            var balances = new List<LeaveBalance>
+            {
+                new LeaveBalance
+                {
+                    Id = Guid.NewGuid(),
+                    EmployeeId = employeeId,
+                    LeaveType = "Earned Leave",
+                    TotalDays = 18,
+                    UsedDays = 0
+                },
+                new LeaveBalance
+                {
+                    Id = Guid.NewGuid(),
+                    EmployeeId = employeeId,
+                    LeaveType = "Casual Leave",
+                    TotalDays = 8,
+                    UsedDays = 0
+                },
+                new LeaveBalance
+                {
+                    Id = Guid.NewGuid(),
+                    EmployeeId = employeeId,
+                    LeaveType = "Sick Leave",
+                    TotalDays = 7,
+                    UsedDays = 0
+                }
+            };
+
+            await _leaveBalanceRepository.AddRangeAsync(
+                balances);
         }
     }
 }
