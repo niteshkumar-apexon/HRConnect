@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosInstance";
+import { useToaster } from "../../components/Toaster/Toaster";
 
 type ApiError = {
   response?: {
@@ -12,18 +13,25 @@ type ApiError = {
 
 const Register = () => {
   const navigate = useNavigate();
+  const { showToast } = useToaster();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+
   const handleRegister = async () => {
     setLoading(true);
     setError("");
     try {
       await api.post("/Auth/register", { fullName, email, password });
-      navigate("/login");
+      showToast(
+        "Your account is created successfully. Your leave(s) will get created to your account within some days.",
+        "success"
+      );
+      // Let the user see the toast before redirecting
+      window.setTimeout(() => navigate("/login"), 500);
     } catch (err: unknown) {
       const e = err as ApiError;
       setError(e.response?.data?.message || "Registration failed. Try again.");
