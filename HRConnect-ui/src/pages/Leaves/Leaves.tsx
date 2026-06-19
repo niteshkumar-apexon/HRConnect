@@ -168,6 +168,7 @@ const isSingleDayLeave =
         return "badge badgePending";
     }
   };
+  
 
   return (
     <div className="page">
@@ -372,8 +373,8 @@ const isSingleDayLeave =
                   leaves.map((leave) => (
                     <tr key={leave.id}>
                       <td className="td">{leave.leaveType}</td>
-                      <td className="td">{leave.startDate}</td>
-                      <td className="td">{leave.endDate}</td>
+                     <td className="td">{leave.startDate?.split("T")[0]}</td>
+                      <td className="td">{leave.endDate?.split("T")[0]}</td>
                       <td className="td">{leave.reason}</td>
                       <td className="td">
                         <span className={getStatusBadgeClass(leave.status)}>
