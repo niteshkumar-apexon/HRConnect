@@ -14,9 +14,9 @@ namespace HRConnect.Domain.Entities
 
         public string LeaveType { get; set; } = string.Empty;
 
-        public int TotalDays { get; set; }
+        public decimal TotalDays { get; set; }
 
-        public int UsedDays { get; set; }
+        public decimal UsedDays { get; set; }
 
         public Employee Employee { get; set; } = null!;
     }

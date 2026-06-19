@@ -15,5 +15,14 @@ namespace HRConnect.Application.DTO.Leave
         public DateTime EndDate { get; set; }
 
         public string Reason { get; set; } = string.Empty;
+
+        public bool FirstHalf { get; set; }
+
+        public bool SecondHalf { get; set; }
+
+        public bool FirstDaySecondHalf { get; set; }
+
+        public bool LastDayFirstHalf { get; set; }
+
     }
 }

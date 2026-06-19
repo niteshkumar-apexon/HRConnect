@@ -20,12 +20,12 @@ namespace HRConnect.Application.DTO.Leave
 
         public DateTime EndDate { get; set; }
 
-        public int TotalDays { get; set; }
+        public decimal TotalDays { get; set; }
 
         public string Reason { get; set; } = string.Empty;
 
         public string Status { get; set; } = string.Empty;
 
-        public DateTime CreatedOn { get; set; }
+        //public DateTime CreatedOn { get; set; }
     }
 }

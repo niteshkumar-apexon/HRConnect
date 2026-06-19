@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using HRConnect.Application.DTO;
 using HRConnect.Application.DTO.Employee;
 using HRConnect.Application.Exceptions;
 using HRConnect.Application.Interfaces.Repositories;
@@ -11,14 +12,18 @@ namespace HRConnect.Application.Interfaces.Services
         private readonly IEmployeeRepository _repository;
         private readonly IMapper _mapper;
         private readonly ILeaveBalanceRepository _leaveBalanceRepository;
+        private readonly IUserRepository _userRepository;
 
 
-        public EmployeeService(
-            IEmployeeRepository repository, IMapper mapper, ILeaveBalanceRepository leaveBalanceRepository)
+        public EmployeeService(IEmployeeRepository repository,
+            IUserRepository userRepository,
+            IMapper mapper, 
+            ILeaveBalanceRepository leaveBalanceRepository)
         {
             _repository = repository;
             _mapper = mapper;
             _leaveBalanceRepository = leaveBalanceRepository;
+            _userRepository= userRepository;
         }
 
         public async Task<List<EmployeeResponseDto>> GetEmployeesAsync()
@@ -150,6 +155,21 @@ namespace HRConnect.Application.Interfaces.Services
 
             await _leaveBalanceRepository.AddRangeAsync(
                 balances);
+        }
+
+        public async Task<List<UserDropdownDto>> GetAvailableUsersAsync()
+        {
+            var users =
+                await _userRepository
+                    .GetUsersWithoutEmployeeAsync();
+
+            return users.Select(x =>
+                new UserDropdownDto
+                {
+                    Id = x.Id,
+                    FullName = x.FullName,
+                    Email = x.Email
+                }).ToList();
         }
     }
 }
