@@ -136,6 +136,29 @@ namespace HRConnect.Application.Interfaces.Services
             return _mapper.Map<List<LeaveResponseDto>>(pendingLeaves);
         }
 
+        public async Task<List<LeaveTypeDropdownDto>> GetAvailableLeaveTypesAsync(Guid userId)
+        {
+            var employee =await _employeeRepository.GetByUserIdAsync(userId);
+
+            if (employee == null)
+                throw new NotFoundException("Employee not found.");
+
+            var balances =
+                await _leaveBalanceRepository
+                    .GetByEmployeeIdAsync(employee.Id);
+
+            return balances
+                .Where(x => (x.TotalDays - x.UsedDays) > 0)
+                .Select(x => new LeaveTypeDropdownDto
+                {
+                    LeaveType = x.LeaveType,
+                    TotalDays = x.TotalDays,
+                    UsedDays = x.UsedDays,
+                    RemainingDays = x.TotalDays - x.UsedDays
+                })
+                .ToList();
+        }
+
         public async Task UpdateLeaveStatusAsync(Guid leaveId, string status)
         {
             var leave = await _leaveRepository.GetByIdAsync(leaveId);

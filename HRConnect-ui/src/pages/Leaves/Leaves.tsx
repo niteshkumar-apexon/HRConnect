@@ -3,6 +3,13 @@ import api from "../../api/axiosInstance";
 import type { LeaveRequest } from "../../types";
 import { useNavigate } from "react-router-dom";
 
+interface AvailableLeaveType {
+  leaveType: string;
+  totalDays: number;
+  usedDays: number;
+  remainingDays: number;
+}
+
 const Leaves = () => {
   const navigate = useNavigate();
 
@@ -11,6 +18,8 @@ const Leaves = () => {
   const [error, setError] = useState("");
 
   const [leaveType, setLeaveType] = useState("");
+  const [availableLeaveTypes, setAvailableLeaveTypes] = useState<AvailableLeaveType[]>([]);
+  const [leaveTypesLoading, setLeaveTypesLoading] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [reason, setReason] = useState("");
@@ -36,8 +45,24 @@ const Leaves = () => {
     }
   };
 
+  const fetchAvailableLeaveTypes = async () => {
+    setLeaveTypesLoading(true);
+    try {
+      const res = await api.get("/leaves/available-leave-types");
+      const leaveTypes = Array.isArray(res.data)
+        ? res.data
+        : res.data?.data ?? [];
+      setAvailableLeaveTypes(leaveTypes);
+    } catch {
+      setAvailableLeaveTypes([]);
+    } finally {
+      setLeaveTypesLoading(false);
+    }
+  };
+
   useEffect(() => {
     void fetchLeaves();
+    void fetchAvailableLeaveTypes();
   }, []);
 
   // ================= DATE VALIDATION =================
@@ -203,10 +228,14 @@ const isSingleDayLeave =
               value={leaveType}
               onChange={(e) => setLeaveType(e.target.value)}>
 
-                <option value="" style={{ color: "#000" }}>Select leave type</option>
-                <option value="Casual Leave" style={{ color: "#000" }}>Casual Leave</option>
-                <option value="Earned Leave" style={{ color: "#000" }}>Earned Leave</option>
-                <option value="Sick Leave" style={{ color: "#000" }}>Sick Leave</option>
+                <option value="" style={{ color: "#000" }}>
+                  {leaveTypesLoading ? "Loading leave types..." : "Select leave type"}
+                </option>
+                {availableLeaveTypes.map((type) => (
+                  <option key={type.leaveType} value={type.leaveType} style={{ color: "#000" }}>
+                    {type.leaveType} ({type.remainingDays} days available)
+                  </option>
+                ))}
 
             </select>
           </div>

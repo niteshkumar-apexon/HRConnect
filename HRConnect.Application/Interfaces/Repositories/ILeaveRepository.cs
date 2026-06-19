@@ -22,5 +22,6 @@ namespace HRConnect.Application.Interfaces.Repositories
         Task<LeaveRequest?> GetByIdAsync(Guid id);
 
         Task UpdateAsync(LeaveRequest leave);
+
     }
 }

@@ -28,15 +28,6 @@ namespace HRConnect.API.Controllers
             return Ok(users);
         }
 
-
-        //[HttpGet]
-        //public async Task<IActionResult> Get()
-        //{
-        //    var result = await _service.GetEmployeesAsync();
-
-        //    return Ok(result);
-        //}
-
         // If no filters supplied return all employees
         [HttpGet]
         public async Task<IActionResult> GetEmployees([FromQuery] string? search, [FromQuery] string? department, [FromQuery] string? designation)

@@ -73,6 +73,20 @@ namespace HRConnect.API.Controllers
                 Message = "Leave status updated successfully"
             });
         }
+
+        [Authorize]
+        [HttpGet("available-leave-types")]
+        public async Task<IActionResult> GetAvailableLeaveTypes()
+        {
+            var userId = Guid.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var leaveTypes =
+                await _leaveService.GetAvailableLeaveTypesAsync(userId);
+
+            return Ok(leaveTypes);
+        }
+
         [Authorize]
         [HttpGet("dashboard")]
         public async Task<IActionResult> GetDashboard()
@@ -85,5 +99,7 @@ namespace HRConnect.API.Controllers
 
             return Ok(dashboard);
         }
+
+
     }
 }
