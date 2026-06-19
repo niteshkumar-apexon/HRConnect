@@ -204,18 +204,12 @@ const Leaves = () => {
             <select
               className="select"
               value={leaveType}
-              onChange={(e) => setLeaveType(e.target.value)}
-              
-            >
+              onChange={(e) => setLeaveType(e.target.value)}>
 
-                <option value="" style={{ color: "#000" }}>
-    Select leave type
-  </option>
-  <option value="Annual" style={{ color: "#000" }}>Annual</option>
-  <option value="Sick" style={{ color: "#000" }}>Sick</option>
-  <option value="Casual" style={{ color: "#000" }}>Casual</option>
-  <option value="Unpaid" style={{ color: "#000" }}>Unpaid</option>
-
+                <option value="" style={{ color: "#000" }}>Select leave type</option>
+                <option value="Casual Leave" style={{ color: "#000" }}>Casual Leave</option>
+                <option value="Earned Leave" style={{ color: "#000" }}>Earned Leave</option>
+                <option value="Sick Leave" style={{ color: "#000" }}>Sick Leave</option>
 
             </select>
           </div>

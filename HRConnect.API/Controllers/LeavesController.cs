@@ -1,4 +1,5 @@
-﻿using HRConnect.Application.DTO.Leave;
+﻿using HRConnect.API.CommonHelper;
+using HRConnect.Application.DTO.Leave;
 using HRConnect.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -22,11 +23,7 @@ namespace HRConnect.API.Controllers
         [HttpPost]
         public async Task<IActionResult> ApplyLeave(CreateLeaveRequestDto dto)
         {
-            var userId =
-                Guid.Parse(
-                    User.FindFirst(
-                        ClaimTypes.NameIdentifier)!
-                    .Value);
+            var userId = User.GetUserId();
 
             var response= await _leaveService.ApplyLeaveAsync(userId, dto);
 
@@ -36,7 +33,9 @@ namespace HRConnect.API.Controllers
         [HttpGet("mine")]
         public async Task<IActionResult> GetMyLeaves()
         {
-            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            //var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var userId = User.GetUserId();           
 
             var leaves = await _leaveService.GetMyLeavesAsync(userId);
 
@@ -58,8 +57,8 @@ namespace HRConnect.API.Controllers
         [HttpGet("dashboard")]
         public async Task<IActionResult> GetDashboard()
         {
-            var userId = Guid.Parse(
-                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            //var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var userId = User.GetUserId();
 
             var dashboard =
                 await _leaveService.GetDashboardAsync(userId);
