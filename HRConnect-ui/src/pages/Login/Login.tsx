@@ -35,6 +35,7 @@ const Login = () => {
     password: "",
   });
 
+  // ================= VALIDATION =================
   const validateForm = () => {
     const errors = {
       email: "",
@@ -62,12 +63,11 @@ const Login = () => {
     return isValid;
   };
 
+  // ================= LOGIN =================
   const handleLogin = async () => {
     setError("");
 
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setLoading(true);
 
@@ -111,6 +111,7 @@ const Login = () => {
   return (
     <div className="authWrap">
       <div className="card authCard">
+
         <div className="header">
           <div>
             <h2 className="title">HRConnect</h2>
@@ -120,67 +121,94 @@ const Login = () => {
           </div>
         </div>
 
+        {/* SERVER ERROR */}
         {error && (
-          <p style={{ color: "red", marginTop: 0 }}>
-            {error}
-          </p>
+          <p style={{ color: "red", marginTop: 0 }}>{error}</p>
         )}
 
+        {/* EMAIL */}
         <div className="field">
           <label className="label">Email</label>
           <input
             className="input"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setEmail(value);
+
+              // CLEAR OR UPDATE ERROR LIVE
+              if (!value.trim()) {
+                setValidationErrors((p) => ({
+                  ...p,
+                  email: "Email is required",
+                }));
+              } else if (
+                !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value)
+              ) {
+                setValidationErrors((p) => ({
+                  ...p,
+                  email: "Enter a valid email address",
+                }));
+              } else {
+                setValidationErrors((p) => ({
+                  ...p,
+                  email: "",
+                }));
+              }
+            }}
             style={{
-              border: validationErrors.email
-                ? "1px solid red"
-                : undefined,
+              border: validationErrors.email ? "1px solid red" : undefined,
             }}
           />
+
           {validationErrors.email && (
-            <small
-              style={{
-                color: "red",
-                display: "block",
-                marginTop: "4px",
-              }}
-            >
+            <small style={{ color: "red", display: "block", marginTop: 4 }}>
               {validationErrors.email}
             </small>
           )}
         </div>
 
+        {/* PASSWORD */}
         <div className="field">
           <label className="label">Password</label>
           <input
             className="input"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setPassword(value);
+
+              if (!value) {
+                setValidationErrors((p) => ({
+                  ...p,
+                  password: "Password is required",
+                }));
+              } else {
+                setValidationErrors((p) => ({
+                  ...p,
+                  password: "",
+                }));
+              }
+            }}
             style={{
               border: validationErrors.password
                 ? "1px solid red"
                 : undefined,
             }}
           />
+
           {validationErrors.password && (
-            <small
-              style={{
-                color: "red",
-                display: "block",
-                marginTop: "4px",
-              }}
-            >
+            <small style={{ color: "red", display: "block", marginTop: 4 }}>
               {validationErrors.password}
             </small>
           )}
         </div>
 
+        {/* BUTTON (NOT DISABLED) */}
         <button
           onClick={handleLogin}
-          disabled={loading}
           className="btn btnPrimary"
           style={{
             width: "100%",

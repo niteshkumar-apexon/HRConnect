@@ -13,9 +13,6 @@ type ApiError = {
 
 const Register = () => {
   const navigate = useNavigate();
-
-
-
   const { showToast } = useToaster();
 
   const [fullName, setFullName] = useState("");
@@ -26,7 +23,6 @@ const Register = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-
   const [validationErrors, setValidationErrors] = useState({
     fullName: "",
     email: "",
@@ -34,6 +30,7 @@ const Register = () => {
     confirmPassword: "",
   });
 
+  // ================= VALIDATION =================
   const validateForm = () => {
     const errors = {
       fullName: "",
@@ -78,35 +75,28 @@ const Register = () => {
     setValidationErrors(errors);
     return isValid;
   };
-                                                                                                                                      
 
+  // ================= REGISTER =================
   const handleRegister = async () => {
     setError("");
 
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setLoading(true);
 
     try {
-
       await api.post("/Auth/register", {
         fullName,
         email,
         password,
       });
 
-      navigate("/login");
-
-      await api.post("/Auth/register", { fullName, email, password });
       showToast(
         "Your account is created successfully. Your leave(s) will get created to your account within some days.",
         "success"
       );
-      // Let the user see the toast before redirecting
-      window.setTimeout(() => navigate("/login"), 500);
 
+      window.setTimeout(() => navigate("/login"), 500);
     } catch (err: unknown) {
       const e = err as ApiError;
       setError(
@@ -120,6 +110,7 @@ const Register = () => {
   return (
     <div className="authWrap">
       <div className="card authCard">
+
         <div className="header">
           <div>
             <h2 className="title">HRConnect</h2>
@@ -128,19 +119,27 @@ const Register = () => {
         </div>
 
         {error && (
-          <p style={{ color: "red", marginTop: 0 }}>
-            {error}
-          </p>
+          <p style={{ color: "red", marginTop: 0 }}>{error}</p>
         )}
 
+        {/* FULL NAME */}
         <div className="field">
           <label className="label">Full Name</label>
           <input
             className="input"
             type="text"
             value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setFullName(value);
+
+              setValidationErrors((p) => ({
+                ...p,
+                fullName: value.trim() ? "" : "Full Name is required",
+              }));
+            }}
           />
+
           {validationErrors.fullName && (
             <small style={{ color: "red" }}>
               {validationErrors.fullName}
@@ -148,14 +147,38 @@ const Register = () => {
           )}
         </div>
 
+        {/* EMAIL */}
         <div className="field">
           <label className="label">Email</label>
           <input
             className="input"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setEmail(value);
+
+              if (!value.trim()) {
+                setValidationErrors((p) => ({
+                  ...p,
+                  email: "Email is required",
+                }));
+              } else if (
+                !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value)
+              ) {
+                setValidationErrors((p) => ({
+                  ...p,
+                  email: "Enter a valid email address",
+                }));
+              } else {
+                setValidationErrors((p) => ({
+                  ...p,
+                  email: "",
+                }));
+              }
+            }}
           />
+
           {validationErrors.email && (
             <small style={{ color: "red" }}>
               {validationErrors.email}
@@ -163,14 +186,49 @@ const Register = () => {
           )}
         </div>
 
+        {/* PASSWORD */}
         <div className="field">
           <label className="label">Password</label>
           <input
             className="input"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setPassword(value);
+
+              if (!value) {
+                setValidationErrors((p) => ({
+                  ...p,
+                  password: "Password is required",
+                }));
+              } else if (value.length < 6) {
+                setValidationErrors((p) => ({
+                  ...p,
+                  password: "Password must be at least 6 characters",
+                }));
+              } else {
+                setValidationErrors((p) => ({
+                  ...p,
+                  password: "",
+                }));
+              }
+
+              // confirm password re-check
+              if (confirmPassword && value !== confirmPassword) {
+                setValidationErrors((p) => ({
+                  ...p,
+                  confirmPassword: "Passwords do not match",
+                }));
+              } else {
+                setValidationErrors((p) => ({
+                  ...p,
+                  confirmPassword: "",
+                }));
+              }
+            }}
           />
+
           {validationErrors.password && (
             <small style={{ color: "red" }}>
               {validationErrors.password}
@@ -178,14 +236,36 @@ const Register = () => {
           )}
         </div>
 
+        {/* CONFIRM PASSWORD */}
         <div className="field">
           <label className="label">Confirm Password</label>
           <input
             className="input"
             type="password"
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setConfirmPassword(value);
+
+              if (!value) {
+                setValidationErrors((p) => ({
+                  ...p,
+                  confirmPassword: "Confirm Password is required",
+                }));
+              } else if (value !== password) {
+                setValidationErrors((p) => ({
+                  ...p,
+                  confirmPassword: "Passwords do not match",
+                }));
+              } else {
+                setValidationErrors((p) => ({
+                  ...p,
+                  confirmPassword: "",
+                }));
+              }
+            }}
           />
+
           {validationErrors.confirmPassword && (
             <small style={{ color: "red" }}>
               {validationErrors.confirmPassword}
@@ -193,9 +273,9 @@ const Register = () => {
           )}
         </div>
 
+        {/* BUTTON */}
         <button
           onClick={handleRegister}
-          disabled={loading}
           className="btn btnSuccess"
           style={{
             width: "100%",
@@ -217,4 +297,3 @@ const Register = () => {
 };
 
 export default Register;
-
