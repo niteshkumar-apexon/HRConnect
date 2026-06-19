@@ -418,7 +418,7 @@ useEffect(() => {
                       className="select"
                       value={editEmployee.userId}
                       onChange={(e) => setEditEmployee({ ...editEmployee, userId: e.target.value })}
-                      disabled={editUsersLoading}
+                      disabled
                     >
                       <option value="">
                         {editUsersLoading ? "Loading users..." : "Select user"}
