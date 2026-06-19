@@ -7,7 +7,9 @@ import { jwtDecode } from "jwt-decode";
 interface JwtPayload {
   "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier": string;
   "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress": string;
-  IsAdmin: string;
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"?: string;
+  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"?: string;
+  IsAdmin?: string;
 }
 
 type ApiError = {
@@ -35,11 +37,13 @@ const Login = () => {
 
       const decoded = jwtDecode<JwtPayload>(token);
       const user = {
-        id: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"],
-        email: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"],
-        fullName: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"],
-        isAdmin: decoded.IsAdmin === "True",
-      };
+  id: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"],
+  email: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"],
+  fullName: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"],
+  isAdmin:
+    decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] === "Admin" ||
+    decoded.IsAdmin === "True",
+};
 
       login(token, user);
       navigate(user.isAdmin ? "/admin" : "/dashboard");
