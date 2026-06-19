@@ -1,18 +1,26 @@
 import { useState, useEffect } from "react";
 import api from "../../api/axiosInstance";
-import type { Employee, LeaveRequest } from "../../types";
+import type { AddEmployeeErrors, Employee, PendingLeaveRequest, User } from "../../types";
 import { useNavigate } from "react-router-dom";
 
 const Admin = () => {
   const navigate = useNavigate();
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
+  const [leaves, setLeaves] = useState<PendingLeaveRequest[]>([]);
   const [activeTab, setActiveTab] = useState<"employees" | "leaves">("employees");
   const [loading, setLoading] = useState(false);
 
   // Add Employee form state
   const [showAddForm, setShowAddForm] = useState(false);
+  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
   const [newEmployee, setNewEmployee] = useState({
+    userId: "",
+    department: "",
+    designation: "",
+    joiningDate: "",
+  });
+  const [fieldErrors, setFieldErrors] = useState<AddEmployeeErrors>({
     userId: "",
     department: "",
     designation: "",
@@ -33,8 +41,59 @@ const Admin = () => {
   });
   const [editError, setEditError] = useState("");
   const [editing, setEditing] = useState(false);
+  const [editUserOptions, setEditUserOptions] = useState<User[]>([]);
+  const [editUsersLoading, setEditUsersLoading] = useState(false);
 
-  const handleEditEmployee = async () => {
+  const toArrayData = <T,>(payload: unknown): T[] => {
+    if (Array.isArray(payload)) return payload as T[];
+    if (payload && typeof payload === "object" && "data" in payload) {
+      const nested = (payload as { data?: unknown }).data;
+      return Array.isArray(nested) ? (nested as T[]) : [];
+    }
+    return [];
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [empRes, leaveRes] = await Promise.allSettled([
+          api.get("/Employees"),
+          api.get("/leaves/admin/pending"),
+        ]);
+
+        if (empRes.status === "fulfilled") {
+          setEmployees(toArrayData<Employee>(empRes.value.data));
+        } else {
+          console.error("Failed to fetch employees");
+          setEmployees([]);
+        }
+
+        if (leaveRes.status === "fulfilled") {
+          setLeaves(toArrayData<PendingLeaveRequest>(leaveRes.value.data));
+        } else {
+          console.error("Failed to fetch leaves");
+          setLeaves([]);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadData();
+  }, []);
+
+const fetchEmployees = async () => {
+  try {
+    const res = await api.get("/Employees");
+    setEmployees(toArrayData<Employee>(res.data));
+  } catch {
+    console.error("Failed to fetch employees");
+    setEmployees([]);
+  }
+};
+
+const handleEditEmployee = async () => {
     setEditing(true);
     setEditError("");
     try {
@@ -54,6 +113,7 @@ const Admin = () => {
         joiningDate: "",
         fullName: "",
       });
+      setEditUserOptions([]);
       fetchEmployees();
     } catch (err: unknown) {
       const anyErr = err as {
@@ -65,64 +125,125 @@ const Admin = () => {
     }
   };
 
-
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-    try {
-      const [empRes] = await Promise.all([
-        api.get("/Employees"),
-      ]);
-
-      // Supports both [..] and { data: [..] } response shapes.
-      const empData = Array.isArray(empRes.data)
-        ? empRes.data
-        : empRes.data?.data ?? [];
-
-      setEmployees(empData);
-    } catch (err: unknown) {
-      console.error("Failed to fetch data", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  loadData();
-}, []);
-
-const fetchEmployees = async () => {
-  try {
-    const res = await api.get("/Employees");
-    setEmployees(res.data);
-  } catch {
-    console.error("Failed to fetch employees");
-  }
-};
-
 const fetchLeaves = async () => {
   try {
-    const res = await api.get("/leaves");
-    setLeaves(res.data);
+    const res = await api.get("/leaves/admin/pending");
+    setLeaves(toArrayData<PendingLeaveRequest>(res.data));
   } catch {
     console.error("Failed to fetch leaves");
+    setLeaves([]);
   }
 };
 
+const fetchAvailableUsers = async () => {
+  setUsersLoading(true);
+  try {
+    const res = await api.get("/Employees/available-users");
+    const userData = toArrayData<User>(res.data);
+    setAvailableUsers(userData);
+  } catch {
+    console.error("Failed to fetch available users");
+    setAvailableUsers([]);
+  } finally {
+    setUsersLoading(false);
+  }
+};
+
+const fetchEditUserOptions = async (
+  currentUserId: string,
+  currentFullName: string
+) => {
+  setEditUsersLoading(true);
+  const currentUser: User = {
+    id: currentUserId,
+    fullName: currentFullName,
+    email: "",
+    isAdmin: false,
+  };
+
+  try {
+    const res = await api.get("/Employees/available-users");
+    const userData = toArrayData<User>(res.data);
+    const hasCurrentUser = userData.some((user) => user.id === currentUserId);
+
+    setEditUserOptions(
+      hasCurrentUser
+        ? userData
+        : [currentUser, ...userData]
+    );
+  } catch {
+    console.error("Failed to fetch users for edit");
+    setEditUserOptions([currentUser]);
+  } finally {
+    setEditUsersLoading(false);
+  }
+};
+
+useEffect(() => {
+  if (showAddForm) {
+    void fetchAvailableUsers();
+  } else {
+    setFieldErrors({
+      userId: "",
+      department: "",
+      designation: "",
+      joiningDate: "",
+    });
+    setAddError("");
+  }
+}, [showAddForm]);
+
+  const validateAddEmployee = () => {
+    const errors: AddEmployeeErrors = {
+      userId: "",
+      department: "",
+      designation: "",
+      joiningDate: "",
+    };
+
+    if (!newEmployee.userId) {
+      errors.userId = "Please select a user.";
+    }
+
+    if (!newEmployee.department.trim()) {
+      errors.department = "Department is required.";
+    }
+
+    if (!newEmployee.designation.trim()) {
+      errors.designation = "Designation is required.";
+    }
+
+    if (!newEmployee.joiningDate) {
+      errors.joiningDate = "Joining date is required.";
+    } else {
+      const selectedDate = new Date(newEmployee.joiningDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate > today) {
+        errors.joiningDate = "Joining date cannot be in the future.";
+      }
+    }
+
+    setFieldErrors(errors);
+    return !Object.values(errors).some(Boolean);
+  };
+
   const handleAddEmployee = async () => {
+    if (!validateAddEmployee()) {
+      return;
+    }
+
     setAdding(true);
     setAddError("");
     try {
       await api.post("/Employees", newEmployee);
       setShowAddForm(false);
       setNewEmployee({ userId: "", department: "", designation: "", joiningDate: "" });
+      setFieldErrors({ userId: "", department: "", designation: "", joiningDate: "" });
       fetchEmployees();
-    } catch (err) {
-      const anyErr = err as {
-        response?: { data?: { message?: string } };
-      };
-      const message = anyErr.response?.data?.message;
-      setAddError(message || "Failed to add employee.");
-      return;
+      fetchAvailableUsers();
+    } catch (err:any) {
+      setAddError(err.response?.data?.message || "Failed to add employee.");
     } finally {
       setAdding(false);
     }
@@ -196,31 +317,78 @@ const fetchLeaves = async () => {
                 )}
                 <div className="grid2">
                   <div className="field">
-                    <label className="label">User ID</label>
-                    <input className="input" type="text"
-                      placeholder="User UUID"
+                    <label className="label">User</label>
+                    <select
+                      className="select"
                       value={newEmployee.userId}
-                      onChange={(e) => setNewEmployee({ ...newEmployee, userId: e.target.value })} />
+                      onChange={(e) => {
+                        setNewEmployee({ ...newEmployee, userId: e.target.value });
+                        setFieldErrors({ ...fieldErrors, userId: "" });
+                      }}
+                      disabled={usersLoading}
+                      style={{ border: fieldErrors.userId ? "1px solid red" : undefined }}
+                    >
+                      <option value="">
+                        {usersLoading ? "Loading users..." : "Select user"}
+                      </option>
+                      {availableUsers.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.fullName} ({user.email})
+                        </option>
+                      ))}
+                    </select>
+                    {fieldErrors.userId && (
+                      <small style={{ color: "red", display: "block", marginTop: 4 }}>
+                        {fieldErrors.userId}
+                      </small>
+                    )}
                   </div>
                   <div className="field">
                     <label className="label">Department</label>
                     <input className="input" type="text"
                       placeholder="e.g. Engineering"
                       value={newEmployee.department}
-                      onChange={(e) => setNewEmployee({ ...newEmployee, department: e.target.value })} />
+                      onChange={(e) => {
+                        setNewEmployee({ ...newEmployee, department: e.target.value });
+                        setFieldErrors({ ...fieldErrors, department: "" });
+                      }}
+                      style={{ border: fieldErrors.department ? "1px solid red" : undefined }} />
+                    {fieldErrors.department && (
+                      <small style={{ color: "red", display: "block", marginTop: 4 }}>
+                        {fieldErrors.department}
+                      </small>
+                    )}
                   </div>
                   <div className="field">
                     <label className="label">Designation</label>
                     <input className="input" type="text"
                       placeholder="e.g. Developer"
                       value={newEmployee.designation}
-                      onChange={(e) => setNewEmployee({ ...newEmployee, designation: e.target.value })} />
+                      onChange={(e) => {
+                        setNewEmployee({ ...newEmployee, designation: e.target.value });
+                        setFieldErrors({ ...fieldErrors, designation: "" });
+                      }}
+                      style={{ border: fieldErrors.designation ? "1px solid red" : undefined }} />
+                    {fieldErrors.designation && (
+                      <small style={{ color: "red", display: "block", marginTop: 4 }}>
+                        {fieldErrors.designation}
+                      </small>
+                    )}
                   </div>
                   <div className="field">
                     <label className="label">Joining Date</label>
                     <input className="input" type="date"
                       value={newEmployee.joiningDate}
-                      onChange={(e) => setNewEmployee({ ...newEmployee, joiningDate: e.target.value })} />
+                      onChange={(e) => {
+                        setNewEmployee({ ...newEmployee, joiningDate: e.target.value });
+                        setFieldErrors({ ...fieldErrors, joiningDate: "" });
+                      }}
+                      style={{ border: fieldErrors.joiningDate ? "1px solid red" : undefined }} />
+                    {fieldErrors.joiningDate && (
+                      <small style={{ color: "red", display: "block", marginTop: 4 }}>
+                        {fieldErrors.joiningDate}
+                      </small>
+                    )}
                   </div>
                 </div>
                 <div className="btnRow" style={{ marginTop: 16 }}>
@@ -245,14 +413,23 @@ const fetchLeaves = async () => {
                 )}
                 <div className="grid2">
                   <div className="field">
-                    <label className="label">User ID</label>
-                    <input
-                      className="input"
-                      type="text"
-                      placeholder="User UUID"
+                    <label className="label">User</label>
+                    <select
+                      className="select"
                       value={editEmployee.userId}
                       onChange={(e) => setEditEmployee({ ...editEmployee, userId: e.target.value })}
-                    />
+                      disabled={editUsersLoading}
+                    >
+                      <option value="">
+                        {editUsersLoading ? "Loading users..." : "Select user"}
+                      </option>
+                      {editUserOptions.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.fullName}
+                          {user.email ? ` (${user.email})` : ""}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="field">
                     <label className="label">Department</label>
@@ -293,6 +470,7 @@ const fetchLeaves = async () => {
                     onClick={() => {
                       setShowEditForm(false);
                       setEditError("");
+                      setEditUserOptions([]);
                     }}
                   >
                     Cancel
@@ -315,11 +493,7 @@ const fetchLeaves = async () => {
                 </thead>
                 <tbody>
                   {employees.length === 0 ? (
-                    <tr>
-                      <td className="td" colSpan={5} style={{ textAlign: "center" }}>
-                        No employees found
-                      </td>
-                    </tr>
+                    <tr><td className="td" colSpan={4} style={{ textAlign: "center" }}>No employees found</td></tr>
                   ) : (
                     employees.map((emp) => (
                       <tr key={emp.id}>
@@ -340,8 +514,9 @@ const fetchLeaves = async () => {
                                 joiningDate: emp.joiningDate?.split("T")[0] || "",
                                 fullName: emp.fullName,
                               });
+                              void fetchEditUserOptions(emp.userId, emp.fullName);
                               setShowEditForm(true);
-                              setAddError("");
+                              setEditError("");
                             }}
                           >
                             ✏️ Edit
@@ -359,7 +534,7 @@ const fetchLeaves = async () => {
         {/* Leaves Tab */}
         {activeTab === "leaves" && (
           <div>
-            <h3 style={{ marginBottom: 16 }}>All Leave Requests ({leaves.length})</h3>
+            <h3 style={{ marginBottom: 16 }}>Pending Leave Requests ({leaves.length})</h3>
             <div className="tableWrap">
               <table className="table">
                 <thead>
@@ -374,11 +549,11 @@ const fetchLeaves = async () => {
                 </thead>
                 <tbody>
                   {leaves.length === 0 ? (
-                    <tr><td className="td" colSpan={6} style={{ textAlign: "center" }}>No leave requests found</td></tr>
+                    <tr><td className="td" colSpan={6} style={{ textAlign: "center" }}>No pending leave requests found</td></tr>
                   ) : (
                     leaves.map((leave) => (
                       <tr key={leave.id}>
-                        <td className="td">{leave.employeeId}</td>
+                        <td className="td">{leave.employeeName || leave.employeeId}</td>
                         <td className="td">{leave.leaveType}</td>
                         <td className="td">{leave.startDate?.split("T")[0]}</td>
                         <td className="td">{leave.endDate?.split("T")[0]}</td>

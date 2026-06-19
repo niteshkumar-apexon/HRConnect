@@ -9,6 +9,11 @@ namespace HRConnect.Application.Interfaces.Services
 {
     public interface ILeaveService
     {
+
+        Task<List<LeaveResponseDto>> GetAllLeavesAsync();
+
+        Task<List<LeaveResponseDto>> GetPendingLeavesAsync();
+
         Task<LeaveResponseDto> ApplyLeaveAsync(Guid userId, CreateLeaveRequestDto dto);
 
         Task<List<LeaveResponseDto>> GetMyLeavesAsync(Guid userId);

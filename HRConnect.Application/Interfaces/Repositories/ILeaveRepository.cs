@@ -1,4 +1,5 @@
-﻿using HRConnect.Domain.Entities;
+﻿using HRConnect.Application.DTO.Leave;
+using HRConnect.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,9 @@ namespace HRConnect.Application.Interfaces.Repositories
 {
     public interface ILeaveRepository
     {
+
+        Task<List<LeaveRequest>> GetAllAsync();        
+
         Task<LeaveRequest> CreateAsync(LeaveRequest leave);
 
         Task<List<LeaveRequest>> GetByEmployeeIdAsync(Guid employeeId);

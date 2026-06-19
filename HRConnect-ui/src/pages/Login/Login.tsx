@@ -96,7 +96,7 @@ const Login = () => {
         isAdmin: decoded.IsAdmin === "True",
       };
 
-      login(token, user);
+      login(token, user);      
       navigate(user.isAdmin ? "/admin" : "/dashboard");
     } catch (err: unknown) {
       const e = err as ApiError;

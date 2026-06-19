@@ -54,7 +54,7 @@ namespace HRConnect.Infrastructure.Repositories
             return await _context.LeaveRequests
                 .Include(x => x.Employee)
                 .ThenInclude(x => x.User)
-                //.OrderByDescending(x => x.CreatedOn)
+                .OrderByDescending(x => x.StartDate)
                 .ToListAsync();
         }
 

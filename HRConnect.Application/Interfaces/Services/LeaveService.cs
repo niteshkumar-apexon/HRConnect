@@ -34,6 +34,13 @@ namespace HRConnect.Application.Interfaces.Services
             _mapper = mapper;
         }
 
+        public async Task<List<LeaveResponseDto>> GetAllLeavesAsync()
+        {
+            var leaves = await _leaveRepository.GetAllAsync();
+
+            return _mapper.Map<List<LeaveResponseDto>>(leaves);
+        }
+
 
         public async Task<LeaveResponseDto> ApplyLeaveAsync(Guid userId, CreateLeaveRequestDto dto)
         {
@@ -122,11 +129,11 @@ namespace HRConnect.Application.Interfaces.Services
             return _mapper.Map<List<LeaveResponseDto>>(leaves);
         }
 
-        public async Task<List<LeaveApprovalDto>> GetPendingLeavesAsync()
+        public async Task<List<LeaveResponseDto>> GetPendingLeavesAsync()
         {
             var pendingLeaves = await _leaveRepository.GetPendingAsync();
 
-            return _mapper.Map<List<LeaveApprovalDto>>(pendingLeaves);
+            return _mapper.Map<List<LeaveResponseDto>>(pendingLeaves);
         }
 
         public async Task UpdateLeaveStatusAsync(Guid leaveId, string status)
@@ -158,9 +165,7 @@ namespace HRConnect.Application.Interfaces.Services
                 if (balance == null)
                     throw new Exception("Leave balance not found.");
 
-                var days = (leave.EndDate - leave.StartDate).Days + 1;
-
-                balance.UsedDays += days;
+                balance.UsedDays += leave.NumberofDays;
 
                 await _leaveBalanceRepository.UpdateAsync(balance);
             }

@@ -12,6 +12,21 @@ interface LeaveBalance {
   usedDays: number;
 }
 
+interface LeaveDashboardResponse {
+  casualLeaveTotal: number;
+  casualLeaveUsed: number;
+  casualLeaveRemaining: number;
+  sickLeaveTotal: number;
+  sickLeaveUsed: number;
+  sickLeaveRemaining: number;
+  earnedLeaveTotal: number;
+  earnedLeaveUsed: number;
+  earnedLeaveRemaining: number;
+  pendingRequests: number;
+  approvedRequests: number;
+  rejectedRequests: number;
+}
+
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -29,20 +44,41 @@ const Dashboard = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await api.get("/leaves/mine");
-        setLeaves(res.data);
+        const [leavesRes, balanceRes] = await Promise.all([
+          api.get("/leaves/mine"),
+          api.get<LeaveDashboardResponse>("/leaves/dashboard"),
+        ]);
 
-        // Build balances from leave data or use defaults
-        const computed = LEAVE_TYPES.map((type) => {
-          const used = res.data
-            .filter((l: LeaveRequest) => l.leaveType === type && l.status === "Approved")
-            .reduce((acc: number) => acc + 1, 0);
-          return { leaveType: type, totalDays: 10, usedDays: used };
-        });
-        setBalances(computed);
+        setLeaves(leavesRes.data);
+
+        const data = balanceRes.data;
+        setBalances([
+          {
+            leaveType: "Casual",
+            totalDays: data.casualLeaveTotal ?? 0,
+            usedDays: data.casualLeaveUsed ?? 0,
+          },
+          {
+            leaveType: "Sick",
+            totalDays: data.sickLeaveTotal ?? 0,
+            usedDays: data.sickLeaveUsed ?? 0,
+          },
+          {
+            leaveType: "Earned",
+            totalDays: data.earnedLeaveTotal ?? 0,
+            usedDays: data.earnedLeaveUsed ?? 0,
+          },
+        ]);
       } catch {
-        // If employee not found, show empty state with defaults
-        setBalances(LEAVE_TYPES.map((type) => ({ leaveType: type, totalDays: 10, usedDays: 0 })));
+        // Fallback values when API fails
+        setLeaves([]);
+        setBalances(
+          LEAVE_TYPES.map((type) => ({
+            leaveType: type,
+            totalDays: 0,
+            usedDays: 0,
+          }))
+        );
       } finally {
         setLoading(false);
       }
@@ -65,14 +101,18 @@ const Dashboard = () => {
 
   const balanceColors = ["#ff6b35", "#1890ff", "#52c41a"];
 
+  const formatUsedDays = (days: number) => {
+    return Number.isInteger(days) ? days.toFixed(2) : `${days}`;
+  };
+
   return (
     <div className="page">
       <div className="container">
 
         {/* Header */}
         <div className="header" style={{ marginBottom: 6 }}>
-          <div>
-            <h2 className="title" style={{ marginBottom: 2 }}>Leave Management</h2>
+          <div>            
+            <h2 className="title" style={{ marginBottom: 2 }}>Employee & Leave Management System</h2>
             <p className="subtle" style={{ margin: 0 }}>Manage your leave balance and applications.</p>
           </div>
           <div className="btnRow">
@@ -106,7 +146,7 @@ const Dashboard = () => {
                 <div className="subtle" style={{ fontSize: 12, marginTop: 2 }}>
                   Already taken{" "}
                   <span style={{ color: balanceColors[i], fontWeight: 700 }}>
-                    {b.usedDays}.00 days
+                    {formatUsedDays(b.usedDays)} days
                   </span>
                 </div>
               </div>

@@ -19,6 +19,26 @@ namespace HRConnect.API.Controllers
             _leaveService=leaveService;
         }
 
+        [Authorize(Roles = "Admin")]
+        [HttpGet("admin/all")]
+        public async Task<IActionResult> GetAllLeaves()
+        {
+            var leaves =
+                await _leaveService.GetAllLeavesAsync();
+
+            return Ok(leaves);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("admin/pending")]
+        public async Task<IActionResult> GetPendingLeaves()
+        {
+            var leaves =
+                await _leaveService.GetPendingLeavesAsync();
+
+            return Ok(leaves);
+        }
+
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> ApplyLeave(CreateLeaveRequestDto dto)
