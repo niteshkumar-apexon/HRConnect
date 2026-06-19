@@ -1,4 +1,5 @@
-﻿using HRConnect.Application.DTO.Employee;
+﻿using HRConnect.Application.DTO;
+using HRConnect.Application.DTO.Employee;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,5 +21,8 @@ namespace HRConnect.Application.Interfaces.Services
         Task DeleteEmployeeAsync(Guid id);
 
         Task<List<EmployeeResponseDto>> SearchEmployeesAsync(string? search, string? department, string? designation);
+
+        Task<List<UserDropdownDto>> GetAvailableUsersAsync();
     }
+
 }

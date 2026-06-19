@@ -97,6 +97,7 @@ builder.Services.AddScoped<ILeaveRepository, LeaveRepository>();
 builder.Services.AddScoped<ILeaveService, LeaveService>();
 
 builder.Services.AddScoped<ILeaveBalanceRepository, LeaveBalanceRepository>();
+builder.Services.AddScoped<IUserRepository, EmployeeRepository>();
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -143,7 +144,29 @@ var app = builder.Build();
 // Below 3 lines of code will provide the invalid mapping
 var scope = app.Services.CreateScope();
 var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
-mapper.ConfigurationProvider.AssertConfigurationIsValid();
+//mapper.ConfigurationProvider.AssertConfigurationIsValid();
+
+try
+{
+    mapper.ConfigurationProvider.AssertConfigurationIsValid();
+}
+catch (AutoMapperConfigurationException ex)
+{
+    Console.WriteLine(ex.Message);
+
+    foreach (var error in ex.Errors)
+    {
+        Console.WriteLine($"Source: {error.TypeMap.SourceType}");
+        Console.WriteLine($"Destination: {error.TypeMap.DestinationType}");
+
+        foreach (var member in error.UnmappedPropertyNames)
+        {
+            Console.WriteLine($"Unmapped: {member}");
+        }
+    }
+
+    throw;
+}
 
 app.UseSwagger();
 

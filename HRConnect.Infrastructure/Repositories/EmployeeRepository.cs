@@ -1,4 +1,5 @@
-﻿using HRConnect.Application.Interfaces.Repositories;
+﻿using HRConnect.Application.DTO;
+using HRConnect.Application.Interfaces.Repositories;
 using HRConnect.Domain.Entities;
 using HRConnect.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace HRConnect.Infrastructure.Repositories
 {
-    public class EmployeeRepository : IEmployeeRepository
+    public class EmployeeRepository : IEmployeeRepository, IUserRepository
     {
         private readonly ApplicationDbContext _context;
 
@@ -93,5 +94,18 @@ namespace HRConnect.Infrastructure.Repositories
 
             return await query.ToListAsync();
         }
+
+        public async Task<List<User>> GetUsersWithoutEmployeeAsync()
+        {
+            var employeeUserIds =
+                await _context.Employees
+                    .Select(x => x.UserId)
+                    .ToListAsync();
+
+            return await _context.Users
+                .Where(x => !employeeUserIds.Contains(x.Id))
+                .ToListAsync();
+        }
+
     }
 }
