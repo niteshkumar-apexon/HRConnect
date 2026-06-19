@@ -85,10 +85,12 @@ const Leaves = () => {
 
   const numberOfDays = calculateDays();
 
+  // const isSingleDayLeave =
+  // startDate &&
+  // endDate &&
+  // new Date(startDate).toDateString() === new Date(endDate).toDateString();
   const isSingleDayLeave =
-  startDate &&
-  endDate &&
-  new Date(startDate).toDateString() === new Date(endDate).toDateString();
+  startDate && endDate && startDate === endDate;
 
   const handleBack = () => {
     navigate("/dashboard");
@@ -246,55 +248,60 @@ const Leaves = () => {
         </div>
 
         {/* CHECKBOXES */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          marginTop: "20px",
-          marginBottom: "20px",
-        }}>
+       <div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    marginTop: "20px",
+    marginBottom: "20px",
+  }}
+>
+  {/* SINGLE DAY OPTIONS */}
+  <label>
+    <input
+      type="checkbox"
+      checked={firstHalf}
+      disabled={!isSingleDayLeave}
+      onChange={(e) => setFirstHalf(e.target.checked)}
+    />
+    First Half
+  </label>
 
-          {/* SINGLE DAY */}
-          {isSingleDayLeave && (
-            <>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={firstHalf}
-                  onChange={(e) => setFirstHalf(e.target.checked)}
-                /> First Half
-              </label>
+  <label>
+    <input
+      type="checkbox"
+      checked={secondHalf}
+      disabled={!isSingleDayLeave}
+      onChange={(e) => setSecondHalf(e.target.checked)}
+    />
+    Second Half
+  </label>
 
-              <label>
-                <input
-                  type="checkbox"
-                  checked={secondHalf}
-                  onChange={(e) => setSecondHalf(e.target.checked)}
-                /> Second Half
-              </label>
-            </>
-          )}
+  {/* MULTI DAY OPTIONS */}
+  <label>
+    <input
+      type="checkbox"
+      checked={firstDaySecondHalf}
+      disabled={isSingleDayLeave || numberOfDays < 2}
+      onChange={(e) =>
+        setFirstDaySecondHalf(e.target.checked)
+      }
+    />
+    First Day Second Half
+  </label>
 
-          {/* MULTI DAY */}
-          {!isSingleDayLeave && (
-            <>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={firstDaySecondHalf}
-                  onChange={(e) => setFirstDaySecondHalf(e.target.checked)}
-                /> First Day Second Half
-              </label>
-
-              <label>
-                <input
-                  type="checkbox"
-                  checked={lastDayFirstHalf}
-                  onChange={(e) => setLastDayFirstHalf(e.target.checked)}
-                /> Last Day First Half
-              </label>
-            </>
-          )}
-        </div>
+  <label>
+    <input
+      type="checkbox"
+      checked={lastDayFirstHalf}
+      disabled={isSingleDayLeave || numberOfDays < 2}
+      onChange={(e) =>
+        setLastDayFirstHalf(e.target.checked)
+      }
+    />
+    Last Day First Half
+  </label>
+</div>
 
         {/* DAYS */}
         <div style={{ maxWidth: "300px", marginBottom: "20px" }}>
