@@ -143,6 +143,50 @@ namespace HRConnect.Application.Interfaces.Services
             }
         }
 
+        public async Task<LeaveDashboardDto> GetDashboardAsync(Guid employeeId)
+        {
+            var employee = await _employeeRepository
+        .GetByUserIdAsync(employeeId);
+
+            if (employee == null)
+            {
+                throw new Exception("Employee not found");
+            }
+
+            var balances = await _leaveBalanceRepository
+                .GetByEmployeeIdAsync(employee.Id);
+
+             var casual = balances.FirstOrDefault(x =>
+                x.LeaveType == "Casual Leave");
+
+            var sick = balances.FirstOrDefault(x =>
+                x.LeaveType == "Sick Leave");
+
+            var earned = balances.FirstOrDefault(x =>
+                x.LeaveType == "Earned Leave");
+
+            return new LeaveDashboardDto
+            {
+                CasualLeaveTotal = casual?.TotalDays ?? 0,
+                CasualLeaveUsed = casual?.UsedDays ?? 0,
+                CasualLeaveRemaining =
+                    (casual?.TotalDays ?? 0) -
+                    (casual?.UsedDays ?? 0),
+
+                SickLeaveTotal = sick?.TotalDays ?? 0,
+                SickLeaveUsed = sick?.UsedDays ?? 0,
+                SickLeaveRemaining =
+                    (sick?.TotalDays ?? 0) -
+                    (sick?.UsedDays ?? 0),
+
+                EarnedLeaveTotal = earned?.TotalDays ?? 0,
+                EarnedLeaveUsed = earned?.UsedDays ?? 0,
+                EarnedLeaveRemaining =
+                    (earned?.TotalDays ?? 0) -
+                    (earned?.UsedDays ?? 0)
+            };
+        }
+
         //public async Task ApproveLeaveAsync(Guid leaveId)
         //{
         //    var leave =
