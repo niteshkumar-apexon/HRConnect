@@ -192,10 +192,13 @@ const Leaves = () => {
               onChange={(e) => setLeaveType(e.target.value)}
             >
               <option value="">Select leave type</option>
-              <option value="Annual">Annual</option>
+              {/* <option value="Annual">Annual</option>
               <option value="Sick">Sick</option>
               <option value="Casual">Casual</option>
-              <option value="Unpaid">Unpaid</option>
+              <option value="Unpaid">Unpaid</option> */}
+              <option value="Casual Leave">Casual Leave</option>
+              <option value="Earned Leave">Earned Leave</option>
+              <option value="Sick Leave">Sick Leave</option>
             </select>
           </div>
 
