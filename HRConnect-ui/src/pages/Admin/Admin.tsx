@@ -21,18 +21,67 @@ const Admin = () => {
   const [addError, setAddError] = useState("");
   const [adding, setAdding] = useState(false);
 
-  useEffect(() => {
-  const loadData = async () => {
-    setLoading(true);
+  // Edit Employee form state
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editEmployee, setEditEmployee] = useState({
+    id: "",
+    userId: "",
+    department: "",
+    designation: "",
+    joiningDate: "",
+    fullName: "",
+  });
+  const [editError, setEditError] = useState("");
+  const [editing, setEditing] = useState(false);
+
+  const handleEditEmployee = async () => {
+    setEditing(true);
+    setEditError("");
     try {
-      const [empRes, leaveRes] = await Promise.all([
+      // Prefer update by id. Adjust endpoint if your backend uses a different route.
+      await api.put(`/Employees/${editEmployee.id}`, {
+        userId: editEmployee.userId,
+        department: editEmployee.department,
+        designation: editEmployee.designation,
+        joiningDate: editEmployee.joiningDate,
+      });
+      setShowEditForm(false);
+      setEditEmployee({
+        id: "",
+        userId: "",
+        department: "",
+        designation: "",
+        joiningDate: "",
+        fullName: "",
+      });
+      fetchEmployees();
+    } catch (err: unknown) {
+      const anyErr = err as {
+        response?: { data?: { message?: string } };
+      };
+      setEditError(anyErr.response?.data?.message || "Failed to update employee.");
+    } finally {
+      setEditing(false);
+    }
+  };
+
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+    try {
+      const [empRes] = await Promise.all([
         api.get("/Employees"),
-        api.get("/leaves"),
       ]);
-      setEmployees(empRes.data);
-      setLeaves(leaveRes.data);
-    } catch {
-      console.error("Failed to fetch data");
+
+      // Supports both [..] and { data: [..] } response shapes.
+      const empData = Array.isArray(empRes.data)
+        ? empRes.data
+        : empRes.data?.data ?? [];
+
+      setEmployees(empData);
+    } catch (err: unknown) {
+      console.error("Failed to fetch data", err);
     } finally {
       setLoading(false);
     }
@@ -67,8 +116,13 @@ const fetchLeaves = async () => {
       setShowAddForm(false);
       setNewEmployee({ userId: "", department: "", designation: "", joiningDate: "" });
       fetchEmployees();
-    } catch (err:any) {
-      setAddError(err.response?.data?.message || "Failed to add employee.");
+    } catch (err) {
+      const anyErr = err as {
+        response?: { data?: { message?: string } };
+      };
+      const message = anyErr.response?.data?.message;
+      setAddError(message || "Failed to add employee.");
+      return;
     } finally {
       setAdding(false);
     }
@@ -180,6 +234,73 @@ const fetchLeaves = async () => {
               </div>
             )}
 
+            {/* Edit Employee Form */}
+            {showEditForm && (
+              <div className="card" style={{ marginBottom: 20 }}>
+                <h4 style={{ margin: "0 0 14px" }}>Edit Employee</h4>
+                {editError && (
+                  <div style={{ background: "rgba(255,77,79,.15)", border: "1px solid rgba(255,77,79,.4)", borderRadius: 10, padding: "10px 14px", marginBottom: 14, color: "#ffb5b5" }}>
+                    {editError}
+                  </div>
+                )}
+                <div className="grid2">
+                  <div className="field">
+                    <label className="label">User ID</label>
+                    <input
+                      className="input"
+                      type="text"
+                      placeholder="User UUID"
+                      value={editEmployee.userId}
+                      onChange={(e) => setEditEmployee({ ...editEmployee, userId: e.target.value })}
+                    />
+                  </div>
+                  <div className="field">
+                    <label className="label">Department</label>
+                    <input
+                      className="input"
+                      type="text"
+                      placeholder="e.g. Engineering"
+                      value={editEmployee.department}
+                      onChange={(e) => setEditEmployee({ ...editEmployee, department: e.target.value })}
+                    />
+                  </div>
+                  <div className="field">
+                    <label className="label">Designation</label>
+                    <input
+                      className="input"
+                      type="text"
+                      placeholder="e.g. Developer"
+                      value={editEmployee.designation}
+                      onChange={(e) => setEditEmployee({ ...editEmployee, designation: e.target.value })}
+                    />
+                  </div>
+                  <div className="field">
+                    <label className="label">Joining Date</label>
+                    <input
+                      className="input"
+                      type="date"
+                      value={editEmployee.joiningDate}
+                      onChange={(e) => setEditEmployee({ ...editEmployee, joiningDate: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="btnRow" style={{ marginTop: 16 }}>
+                  <button className="btn btnSuccess" onClick={handleEditEmployee} disabled={editing}>
+                    {editing ? "Saving..." : "✅ Save Changes"}
+                  </button>
+                  <button
+                    className="btn btnGhost"
+                    onClick={() => {
+                      setShowEditForm(false);
+                      setEditError("");
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Employees Table */}
             <div className="tableWrap">
               <table className="table">
@@ -189,11 +310,16 @@ const fetchLeaves = async () => {
                     <th className="th">Department</th>
                     <th className="th">Designation</th>
                     <th className="th">Joining Date</th>
+                    <th className="th">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {employees.length === 0 ? (
-                    <tr><td className="td" colSpan={4} style={{ textAlign: "center" }}>No employees found</td></tr>
+                    <tr>
+                      <td className="td" colSpan={5} style={{ textAlign: "center" }}>
+                        No employees found
+                      </td>
+                    </tr>
                   ) : (
                     employees.map((emp) => (
                       <tr key={emp.id}>
@@ -201,6 +327,26 @@ const fetchLeaves = async () => {
                         <td className="td">{emp.department}</td>
                         <td className="td">{emp.designation}</td>
                         <td className="td">{emp.joiningDate?.split("T")[0]}</td>
+                        <td className="td">
+                          <button
+                            className="btn btnGhost"
+                            style={{ padding: "6px 12px", fontSize: 13 }}
+                            onClick={() => {
+                              setEditEmployee({
+                                id: emp.id,
+                                userId: emp.userId,
+                                department: emp.department,
+                                designation: emp.designation,
+                                joiningDate: emp.joiningDate?.split("T")[0] || "",
+                                fullName: emp.fullName,
+                              });
+                              setShowEditForm(true);
+                              setAddError("");
+                            }}
+                          >
+                            ✏️ Edit
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
