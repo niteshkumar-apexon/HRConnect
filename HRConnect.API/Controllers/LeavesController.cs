@@ -1,4 +1,5 @@
-﻿using HRConnect.Application.DTO.Leave;
+﻿using HRConnect.API.CommonHelper;
+using HRConnect.Application.DTO.Leave;
 using HRConnect.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -18,15 +19,31 @@ namespace HRConnect.API.Controllers
             _leaveService=leaveService;
         }
 
+        [Authorize(Roles = "Admin")]
+        [HttpGet("admin/all")]
+        public async Task<IActionResult> GetAllLeaves()
+        {
+            var leaves =
+                await _leaveService.GetAllLeavesAsync();
+
+            return Ok(leaves);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("admin/pending")]
+        public async Task<IActionResult> GetPendingLeaves()
+        {
+            var leaves =
+                await _leaveService.GetPendingLeavesAsync();
+
+            return Ok(leaves);
+        }
+
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> ApplyLeave(CreateLeaveRequestDto dto)
         {
-            var userId =
-                Guid.Parse(
-                    User.FindFirst(
-                        ClaimTypes.NameIdentifier)!
-                    .Value);
+            var userId = User.GetUserId();
 
             var response= await _leaveService.ApplyLeaveAsync(userId, dto);
 
@@ -36,7 +53,9 @@ namespace HRConnect.API.Controllers
         [HttpGet("mine")]
         public async Task<IActionResult> GetMyLeaves()
         {
-            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            //var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var userId = User.GetUserId();           
 
             var leaves = await _leaveService.GetMyLeavesAsync(userId);
 
@@ -54,17 +73,33 @@ namespace HRConnect.API.Controllers
                 Message = "Leave status updated successfully"
             });
         }
+
+        [Authorize]
+        [HttpGet("available-leave-types")]
+        public async Task<IActionResult> GetAvailableLeaveTypes()
+        {
+            var userId = Guid.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var leaveTypes =
+                await _leaveService.GetAvailableLeaveTypesAsync(userId);
+
+            return Ok(leaveTypes);
+        }
+
         [Authorize]
         [HttpGet("dashboard")]
         public async Task<IActionResult> GetDashboard()
         {
-            var userId = Guid.Parse(
-                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            //var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var userId = User.GetUserId();
 
             var dashboard =
                 await _leaveService.GetDashboardAsync(userId);
 
             return Ok(dashboard);
         }
+
+
     }
 }

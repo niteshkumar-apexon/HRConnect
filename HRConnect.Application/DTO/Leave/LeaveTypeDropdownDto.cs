@@ -4,20 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HRConnect.Domain.Entities
+namespace HRConnect.Application.DTO.Leave
 {
-    public class LeaveBalance
+    public class LeaveTypeDropdownDto
     {
-        public Guid Id { get; set; }
-
-        public Guid EmployeeId { get; set; }
-
         public string LeaveType { get; set; } = string.Empty;
 
         public decimal TotalDays { get; set; }
 
         public decimal UsedDays { get; set; }
 
-        public Employee Employee { get; set; } = null!;
+        public decimal RemainingDays { get; set; }
     }
 }

@@ -19,17 +19,16 @@ namespace HRConnect.API.Controllers
             _leaveService = leaveService;
         }
 
-        //[HttpGet]
-        //public async Task<IActionResult> Get()
-        //{
-        //    var result = await _service.GetEmployeesAsync();
+        [Authorize(Roles = "Admin")]
+        [HttpGet("available-users")]
+        public async Task<IActionResult> GetAvailableUsers()
+        {
+            var users = await _service.GetAvailableUsersAsync();
 
-        //    return Ok(result);
-        //}
+            return Ok(users);
+        }
 
         // If no filters supplied return all employees
-
-
         [HttpGet]
         public async Task<IActionResult> GetEmployees([FromQuery] string? search, [FromQuery] string? department, [FromQuery] string? designation)
         {

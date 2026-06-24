@@ -36,3 +36,24 @@ export interface AuthResponse {
   token: string;
   user: User;
 }
+
+
+
+export interface AddEmployeeErrors {
+  userId: string;
+  department: string;
+  designation: string;
+  joiningDate: string;
+}
+
+export interface PendingLeaveRequest {
+  id: string;
+  employeeId: string;
+  employeeName?: string;
+  leaveType: string;
+  startDate: string;
+  endDate: string;
+  totalDays?: number;
+  reason: string;
+  status: "Pending" | "Approved" | "Rejected" | "Cancelled";
+}

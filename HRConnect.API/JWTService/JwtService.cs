@@ -24,7 +24,7 @@ namespace HRConnect.API.JWTService
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Name, user.FullName),
-                //new Claim("IsAdmin", user.IsAdmin.ToString())
+                new Claim("IsAdmin", user.IsAdmin.ToString()),
                 new Claim(ClaimTypes.Role, user.IsAdmin ? "Admin" : "Employee")
             };
 

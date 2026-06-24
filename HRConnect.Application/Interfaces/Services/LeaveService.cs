@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using HRConnect.Application.DTO;
 using HRConnect.Application.DTO.Leave;
 using HRConnect.Application.Exceptions;
 using HRConnect.Application.Interfaces.Repositories;
@@ -16,18 +17,28 @@ namespace HRConnect.Application.Interfaces.Services
         private readonly ILeaveRepository _leaveRepository;
         private readonly ILeaveBalanceRepository _leaveBalanceRepository;
         private readonly IEmployeeRepository _employeeRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
 
         public LeaveService(
            ILeaveRepository leaveRepository,
            ILeaveBalanceRepository leaveBalanceRepository,
            IEmployeeRepository employeeRepository,
+           IUserRepository userRepository,
            IMapper mapper)
         {
             _leaveRepository = leaveRepository;
             _leaveBalanceRepository = leaveBalanceRepository;
             _employeeRepository = employeeRepository;
+            _userRepository = userRepository;
             _mapper = mapper;
+        }
+
+        public async Task<List<LeaveResponseDto>> GetAllLeavesAsync()
+        {
+            var leaves = await _leaveRepository.GetAllAsync();
+
+            return _mapper.Map<List<LeaveResponseDto>>(leaves);
         }
 
 
@@ -55,7 +66,7 @@ namespace HRConnect.Application.Interfaces.Services
             //    throw new Exception(
             //        "Leave already exists for selected dates.");
 
-            var leaveDays = (dto.EndDate - dto.StartDate).Days + 1;
+            var leaveDays = CalculateLeaveDays(dto); //(dto.EndDate - dto.StartDate).Days + 1;
 
             var balance = await _leaveBalanceRepository.GetByEmployeeAndTypeAsync(employee.Id, dto.LeaveType);
 
@@ -70,21 +81,40 @@ namespace HRConnect.Application.Interfaces.Services
                 throw new BadRequestException(
                     "Insufficient leave balance.");
 
-            var leaveRequest = new LeaveRequest
-            {
-                Id = Guid.NewGuid(),
-                EmployeeId = employee.Id,
-                LeaveType = dto.LeaveType,
-                StartDate = dto.StartDate,
-                EndDate = dto.EndDate,
-                Reason = dto.Reason,
-                Status = "Pending",
-                //CreatedOn = DateTime.UtcNow
-            };
+            var leaveRequest = _mapper.Map<LeaveRequest>(dto);
 
-            await _leaveRepository.CreateAsync(leaveRequest);
+            leaveRequest.Id = Guid.NewGuid();
+            leaveRequest.EmployeeId = employee.Id;
+            leaveRequest.Status = "Pending";
+            leaveRequest.NumberofDays = leaveDays;
 
-            return _mapper.Map<LeaveResponseDto>(leaveRequest);
+            var savedLeave =
+                await _leaveRepository.CreateAsync(
+                    leaveRequest);
+
+            return _mapper.Map<LeaveResponseDto>(
+                savedLeave);
+
+            //var leaveRequest = new LeaveRequest
+            //{
+            //    Id = Guid.NewGuid(),
+            //    EmployeeId = employee.Id,
+            //    LeaveType = dto.LeaveType,
+            //    StartDate = dto.StartDate,
+            //    EndDate = dto.EndDate,
+            //    Reason = dto.Reason,
+
+            //    NumberofDays = leaveDays, //dto.NumberofDays
+            //    FirstHalf = dto.FirstHalf,
+            //    SecondHalf = dto.SecondHalf,
+            //    FirstDaySecondHalf = dto.FirstDaySecondHalf,
+            //    LastDayFirstHalf = dto.LastDayFirstHalf,
+            //    Status = "Pending"
+            //};
+
+            //await _leaveRepository.CreateAsync(leaveRequest);
+
+            //return _mapper.Map<LeaveResponseDto>(leaveRequest);
         }
 
         public async Task<List<LeaveResponseDto>> GetMyLeavesAsync(Guid userId)
@@ -99,11 +129,34 @@ namespace HRConnect.Application.Interfaces.Services
             return _mapper.Map<List<LeaveResponseDto>>(leaves);
         }
 
-        public async Task<List<LeaveApprovalDto>> GetPendingLeavesAsync()
+        public async Task<List<LeaveResponseDto>> GetPendingLeavesAsync()
         {
             var pendingLeaves = await _leaveRepository.GetPendingAsync();
 
-            return _mapper.Map<List<LeaveApprovalDto>>(pendingLeaves);
+            return _mapper.Map<List<LeaveResponseDto>>(pendingLeaves);
+        }
+
+        public async Task<List<LeaveTypeDropdownDto>> GetAvailableLeaveTypesAsync(Guid userId)
+        {
+            var employee =await _employeeRepository.GetByUserIdAsync(userId);
+
+            if (employee == null)
+                throw new NotFoundException("Employee not found.");
+
+            var balances =
+                await _leaveBalanceRepository
+                    .GetByEmployeeIdAsync(employee.Id);
+
+            return balances
+                .Where(x => (x.TotalDays - x.UsedDays) > 0)
+                .Select(x => new LeaveTypeDropdownDto
+                {
+                    LeaveType = x.LeaveType,
+                    TotalDays = x.TotalDays,
+                    UsedDays = x.UsedDays,
+                    RemainingDays = x.TotalDays - x.UsedDays
+                })
+                .ToList();
         }
 
         public async Task UpdateLeaveStatusAsync(Guid leaveId, string status)
@@ -135,9 +188,7 @@ namespace HRConnect.Application.Interfaces.Services
                 if (balance == null)
                     throw new Exception("Leave balance not found.");
 
-                var days = (leave.EndDate - leave.StartDate).Days + 1;
-
-                balance.UsedDays += days;
+                balance.UsedDays += leave.NumberofDays;
 
                 await _leaveBalanceRepository.UpdateAsync(balance);
             }
@@ -187,80 +238,32 @@ namespace HRConnect.Application.Interfaces.Services
             };
         }
 
-        //public async Task ApproveLeaveAsync(Guid leaveId)
-        //{
-        //    var leave =
-        //        await _leaveRepository
-        //            .GetByIdAsync(leaveId);
+        private decimal CalculateLeaveDays(CreateLeaveRequestDto dto)
+        {
+            // Same day leave
+            if (dto.StartDate.Date == dto.EndDate.Date)
+            {
+                if (dto.FirstHalf == true || dto.SecondHalf == true)
+                {
+                    return 0.5M;
+                }
+                return 1M;
+            }
 
-        //    if (leave == null)
-        //        throw new NotFoundException(
-        //            "Leave request not found.");
+            // Multiple days leave
+            decimal days = (dto.EndDate - dto.StartDate).Days + 1;
 
-        //    if (leave.Status != "Pending")
-        //        throw new BadRequestException(
-        //            "Leave already processed.");
+            if (dto.FirstDaySecondHalf == true)
+            {
+                days -= 0.5M;
+            }
 
-        //    leave.Status = "Approved";
+            if (dto.LastDayFirstHalf == true)
+            {
+                days -= 0.5M;
+            }
 
-        //    await _leaveRepository
-        //        .UpdateAsync(leave);
-
-        //    var balance = await _leaveBalanceRepository.GetByEmployeeAndTypeAsync(leave.EmployeeId, leave.LeaveType);
-
-        //    if (balance == null)
-        //        throw new NotFoundException("Leave balance not found.");
-
-        //    var days = (leave.EndDate - leave.StartDate).Days + 1;
-
-        //    balance.UsedDays += days;
-
-        //    await _leaveBalanceRepository.UpdateAsync(balance);
-        //}
-
-        //public async Task RejectLeaveAsync(
-        //    Guid leaveId)
-        //{
-        //    var leave = await _leaveRepository.GetByIdAsync(leaveId);
-
-        //    if (leave == null)
-        //        throw new NotFoundException("Leave request not found.");
-
-        //    if (leave.Status != "Pending")
-        //        throw new BadRequestException(
-        //            "Leave already processed.");
-
-        //    leave.Status = "Rejected";
-
-        //    await _leaveRepository.UpdateAsync(leave);
-        //}
-
-        //public async Task CancelLeaveAsync(Guid leaveId)
-        //{
-        //    var leave = await _leaveRepository.GetByIdAsync(leaveId);
-
-        //    if (leave == null)
-        //        throw new NotFoundException("Leave request not found.");
-
-        //    if (leave.Status == "Cancelled")
-        //        throw new BadRequestException("Leave already cancelled.");
-
-        //    if (leave.Status == "Approved")
-        //    {
-        //        var balance = await _leaveBalanceRepository.GetByEmployeeAndTypeAsync(leave.EmployeeId, leave.LeaveType);
-
-        //        if (balance != null)
-        //        {
-        //            var days = (leave.EndDate - leave.StartDate).Days + 1;
-
-        //            balance.UsedDays -= days;
-
-        //            await _leaveBalanceRepository.UpdateAsync(balance);
-        //        }
-        //    }
-        //    leave.Status = "Cancelled";
-
-        //    await _leaveRepository.UpdateAsync(leave);
-        //}
+            return days;
+        }
     }
 }
