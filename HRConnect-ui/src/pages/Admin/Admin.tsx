@@ -7,7 +7,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
-  const [activeTab, setActiveTab] = useState<"employees" | "leaves">("employees");
+  const [activeTab, setActiveTab] = useState<"employees" | "leaves"| "allEmployees">("employees");
   const [loading, setLoading] = useState(false);
 
   // Add Employee form state
@@ -33,6 +33,11 @@ const Admin = () => {
   });
   const [editError, setEditError] = useState("");
   const [editing, setEditing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  
+
+
 
   const handleEditEmployee = async () => {
     setEditing(true);
@@ -90,14 +95,23 @@ const Admin = () => {
   loadData();
 }, []);
 
-const fetchEmployees = async () => {
+const fetchEmployees = async (search = "") => {
   try {
-    const res = await api.get("/Employees");
+    const res = await api.get("/Employees", {
+      params: search ? { search } : {},
+    });
     setEmployees(res.data);
   } catch {
     console.error("Failed to fetch employees");
   }
 };
+useEffect(() => {
+  const delay = setTimeout(() => {
+    fetchEmployees(searchTerm);
+  }, 400);
+
+  return () => clearTimeout(delay);
+}, [searchTerm]);
 
 const fetchLeaves = async () => {
   try {
@@ -152,12 +166,12 @@ const fetchLeaves = async () => {
       <div className="container">
 
         {/* Header */}
-        <div className="header">
+        {/* <div className="header">
           <h2 className="title">⚙️ Admin Panel</h2>
           <button className="btn btnGhost" onClick={() => navigate("/dashboard")}>
             ← Back to Dashboard
           </button>
-        </div>
+        </div> */}
 
         {/* Tabs */}
         <div className="pillRow" style={{ marginBottom: 24 }}>
@@ -166,6 +180,11 @@ const fetchLeaves = async () => {
             onClick={() => setActiveTab("employees")}>
             👥 Employees
           </button>
+           <button
+    className={`pill ${activeTab === "allEmployees" ? "pillActive" : ""}`}
+    onClick={() => setActiveTab("allEmployees")}>
+    🧑‍🤝‍🧑 All Employees
+  </button>
           <button
             className={`pill ${activeTab === "leaves" ? "pillActive" : ""}`}
             onClick={() => setActiveTab("leaves")}>
@@ -300,6 +319,15 @@ const fetchLeaves = async () => {
                 </div>
               </div>
             )}
+            <div className="searchRow" style={{ marginBottom: 16 }}>
+  <input
+    type="text"
+    className="input"
+    placeholder="Search employees..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+  />
+</div>
 
             {/* Employees Table */}
             <div className="tableWrap">
@@ -355,6 +383,63 @@ const fetchLeaves = async () => {
             </div>
           </div>
         )}
+      {/* All Users Table */}
+      {activeTab === "allEmployees" && (
+<div className="tableWrap" >
+  <table className="table">
+    <thead>
+      <tr>
+        <th className="th">Username</th>
+        <th className="th">Full Name</th>
+        <th className="th">Designation</th>
+        <th className="th">Department</th>
+        <th className="th">Is Employee Added</th>
+        <th className="th">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {employees.length === 0 ? (
+        <tr>
+          <td className="td" colSpan={6} style={{ textAlign: "center" }}>
+            No employees found
+          </td>
+        </tr>
+      ) : (
+        employees.map((user) => (
+          <tr key={user.id}>
+            {/* <td className="td">{user.username}</td> */}
+            <td className="td">{user.fullName}</td>
+            <td className="td">{user.designation || "-"}</td>
+            <td className="td">{user.department || "-"}</td>
+            {/* <td className="td">{user.isEmployeeAdded ? "✅ Yes" : "❌ No"}</td> */}
+            {/* <td className="td">
+              {!user.isEmployeeAdded && (
+                <button
+                  className="btn btnGhost"
+                  style={{ padding: "6px 12px", fontSize: 13 }}
+                  onClick={() => {
+                    setEditEmployee({
+                      id: 0,
+                      userId: user.id,
+                      department: "",
+                      designation: "",
+                      joiningDate: "",
+                      fullName: user.fullName,
+                    });
+                    setShowEditForm(true);
+                    setAddError("");
+                  }}
+                >
+                  ➕ Add Employee
+                </button>
+              )}
+            </td> */}
+          </tr>
+        ))
+      )}
+    </tbody>
+  </table>
+</div>)}
 
         {/* Leaves Tab */}
         {activeTab === "leaves" && (
