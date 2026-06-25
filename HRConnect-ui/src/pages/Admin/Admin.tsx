@@ -1,8 +1,12 @@
 import { useState, useEffect } from "react";
 import api from "../../api/axiosInstance";
 import type { AddEmployeeErrors, AllUser, Employee, PendingLeaveRequest, User } from "../../types";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Admin = () => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [allUsers, setAllUsers] = useState<AllUser[]>([]);
 
@@ -48,6 +52,9 @@ const Admin = () => {
 
   const [editUserOptions, setEditUserOptions] = useState<User[]>([]);
   const [editUsersLoading, setEditUsersLoading] = useState(false);
+
+  const today = new Date();
+  const maxJoiningDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
   const toArrayData = <T,>(payload: unknown): T[] => {
     if (Array.isArray(payload)) return payload as T[];
@@ -349,17 +356,24 @@ const Admin = () => {
     return `badge ${map[status] || "badgePending"}`;
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
     <div className="page">
       <div className="container">
 
         {/* Header */}
-        {/* <div className="header">
-          <h2 className="title">⚙️ Admin Panel</h2>
-          <button className="btn btnGhost" onClick={() => navigate("/dashboard")}>
-            ← Back to Dashboard
-          </button>
-        </div> */}
+        <div className="header" style={{ marginBottom: 16 }}>
+          <h2 className="title" style={{ margin: 0 }}>⚙️ Admin Panel</h2>
+          <div className="btnRow">
+            <button className="btn btnDanger" onClick={handleLogout}>
+              Logout
+            </button>
+          </div>
+        </div>
 
         {/* Tabs */}
         <div className="pillRow" style={{ marginBottom: 24 }}>
@@ -464,6 +478,7 @@ const Admin = () => {
                   <div className="field">
                     <label className="label">Joining Date</label>
                     <input className="input" type="date"
+                      max={maxJoiningDate}
                       value={newEmployee.joiningDate}
                       onChange={(e) => {
                         setNewEmployee({ ...newEmployee, joiningDate: e.target.value });
@@ -542,6 +557,7 @@ const Admin = () => {
                     <input
                       className="input"
                       type="date"
+                      max={maxJoiningDate}
                       value={editEmployee.joiningDate}
                       onChange={(e) => setEditEmployee({ ...editEmployee, joiningDate: e.target.value })}
                     />
