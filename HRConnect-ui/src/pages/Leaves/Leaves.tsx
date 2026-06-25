@@ -66,21 +66,39 @@ const Leaves = () => {
   }, []);
 
   // ================= DATE VALIDATION =================
-  const today = new Date();
+
+const today = new Date();
 today.setHours(0, 0, 0, 0);
+
+const minDate = new Date();
+minDate.setHours(0, 0, 0, 0);
+minDate.setDate(minDate.getDate() - 15);
+
+
+const minDateString = [
+  minDate.getFullYear(),
+  String(minDate.getMonth() + 1).padStart(2, "0"),
+  String(minDate.getDate()).padStart(2, "0"),
+].join("-");
 
 const start = startDate ? new Date(startDate) : null;
 const end = endDate ? new Date(endDate) : null;
 
+
 const isDateValid =
   !!start &&
   !!end &&
+  start >= minDate &&
   end >= start;
 
-  const reasonValid = reason.trim().length >= 10;
 
-  const isFormValid =
-    leaveType && isDateValid && reasonValid;
+const reasonValid = reason.trim().length >= 10;
+
+
+const isFormValid =
+  !!leaveType &&
+  isDateValid &&
+  reasonValid;
 
   // ================= DAYS CALCULATION =================
   const calculateDays = () => {
@@ -248,7 +266,7 @@ const isSingleDayLeave =
               className="input"
               type="date"
               value={startDate}
-              
+               min={minDateString}
               onChange={(e) => setStartDate(e.target.value)}
             />
           </div>
@@ -260,7 +278,8 @@ const isSingleDayLeave =
               className="input"
               type="date"
               value={endDate}
-              
+               min={minDateString}            
+
               onChange={(e) => setEndDate(e.target.value)}
             />
           </div>
