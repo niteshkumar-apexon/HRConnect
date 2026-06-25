@@ -1,4 +1,5 @@
 ﻿using HRConnect.Application.DTO;
+using HRConnect.Application.DTO.User;
 using HRConnect.Application.Interfaces.Repositories;
 using HRConnect.Domain.Entities;
 using HRConnect.Infrastructure.Data;
@@ -104,6 +105,67 @@ namespace HRConnect.Infrastructure.Repositories
 
             return await _context.Users
                 .Where(x => !employeeUserIds.Contains(x.Id))
+                .ToListAsync();
+        }
+
+        public async Task<List<UserEmployeeReportDto>> GetUserEmployeeReportAsync(
+        string? searchTerm)
+        {
+            var query =
+                from user in _context.Users
+
+                join employee in _context.Employees
+                    on user.Id equals employee.UserId
+                    into empGroup
+
+                from employee in empGroup.DefaultIfEmpty()
+
+                select new UserEmployeeReportDto
+                {
+                    UserId = user.Id,
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    IsAdmin = user.IsAdmin,
+
+                    IsEmployeeCreated =
+                        employee != null,
+
+                    EmployeeId =
+                        employee != null
+                            ? employee.Id
+                            : null,
+
+                    Department =
+                        employee != null
+                            ? employee.Department
+                            : null,
+
+                    Designation =
+                        employee != null
+                            ? employee.Designation
+                            : null,
+
+                    JoiningDate =
+                        employee != null
+                            ? employee.JoiningDate
+                            : null
+                };
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                searchTerm = searchTerm.Trim().ToLower();
+
+                query = query.Where(x =>
+                    x.FullName.ToLower().Contains(searchTerm) ||
+                    x.Email.ToLower().Contains(searchTerm) ||
+                    (x.Department != null &&
+                     x.Department.ToLower().Contains(searchTerm)) ||
+                    (x.Designation != null &&
+                     x.Designation.ToLower().Contains(searchTerm)));
+            }
+
+            return await query
+                .OrderBy(x => x.FullName)
                 .ToListAsync();
         }
 

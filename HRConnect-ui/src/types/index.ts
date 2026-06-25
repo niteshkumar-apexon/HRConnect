@@ -5,6 +5,15 @@ export interface User {
   isAdmin: boolean;
 }
 
+export interface AllUser {
+  id: string;
+  email: string;
+  fullName: string;
+  designation?: string;
+  department?: string;
+  isEmployeeCreated: boolean;
+}
+
 export interface Employee {
   id: string;
   userId: string;

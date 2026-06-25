@@ -1,13 +1,18 @@
-﻿using HRConnect.Domain.Entities;
+﻿using HRConnect.Application.Interfaces.Services;
+using HRConnect.Domain.Common;
+using HRConnect.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace HRConnect.Infrastructure.Data
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-        : base(options)
+        private readonly ICurrentUserService _currentUserService;
+
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, 
+            ICurrentUserService currentUserService) : base(options)
         {
+            _currentUserService = currentUserService;
         }
 
         public DbSet<User> Users => Set<User>();
@@ -47,6 +52,32 @@ namespace HRConnect.Infrastructure.Data
                     Designation = "HR Manager",
                     JoiningDate = new DateTime(2025, 1, 1)
                 });
+        }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var entries = ChangeTracker.Entries<BaseAuditableEntity>();
+
+            foreach (var entry in entries)
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    entry.Entity.CreatedDate = DateTime.UtcNow;
+
+                    entry.Entity.CreatedBy =
+                        _currentUserService.UserName ?? "System";
+                }
+
+                if (entry.State == EntityState.Modified)
+                {
+                    entry.Entity.ModifiedDate = DateTime.UtcNow;
+
+                    entry.Entity.ModifiedBy =
+                        _currentUserService.UserName ?? "System";
+                }
+            }
+
+            return await base.SaveChangesAsync(cancellationToken);
         }
     }
 }

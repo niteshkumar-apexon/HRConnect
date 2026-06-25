@@ -74,12 +74,33 @@ namespace HRConnect.API.Controllers
             });
         }
 
+
+        [Authorize]
+        [HttpPut("{id}/cancel")]
+        public async Task<IActionResult> CancelLeave(Guid id)
+        {
+            //var userId = Guid.Parse(
+            //    User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var userId = User.GetUserId();
+
+            await _leaveService.CancelLeaveAsync(id, userId);
+
+            return Ok(new
+            {
+                Message = "Leave cancelled successfully"
+            });
+        }
+
+
         [Authorize]
         [HttpGet("available-leave-types")]
         public async Task<IActionResult> GetAvailableLeaveTypes()
         {
-            var userId = Guid.Parse(
-                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            //var userId = Guid.Parse(
+            //    User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var userId = User.GetUserId();
 
             var leaveTypes =
                 await _leaveService.GetAvailableLeaveTypesAsync(userId);

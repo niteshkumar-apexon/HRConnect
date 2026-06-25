@@ -79,5 +79,27 @@ namespace HRConnect.API.Controllers
 
             return Ok("Employee Deleted");
         }
+
+
+        //[Authorize(Roles = "Admin")]
+        //[HttpGet("user-report")]
+        //public async Task<IActionResult> GetUserReport()
+        //{
+        //    var result = await _service.GetUserEmployeeReportAsync();
+
+        //    return Ok(result);
+        //}
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("user-report")]
+        public async Task<IActionResult> GetUserReport([FromQuery] string? searchTerm)
+        {
+            var result =
+                await _service
+                    .GetUserEmployeeReportAsync(searchTerm);
+
+            return Ok(result);
+        }
+
     }
 }

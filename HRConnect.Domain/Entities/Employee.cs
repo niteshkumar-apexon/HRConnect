@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HRConnect.Domain.Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace HRConnect.Domain.Entities
 {
-    public class Employee
+    public class Employee : BaseAuditableEntity
     {
         public Guid Id { get; set; }
 

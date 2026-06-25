@@ -194,6 +194,43 @@ namespace HRConnect.Application.Interfaces.Services
             }
         }
 
+        public async Task CancelLeaveAsync(Guid leaveId, Guid userId)
+        {
+            var employee =
+                await _employeeRepository
+                    .GetByUserIdAsync(userId);
+
+            if (employee == null)
+                throw new NotFoundException("Employee not found.");
+
+            var leave =
+                await _leaveRepository.GetByIdAsync(leaveId);
+
+            if (leave == null)
+                throw new NotFoundException("Leave request not found.");
+
+            if (leave.EmployeeId != employee.Id)
+                throw new BadRequestException(
+                    "You can cancel only your own leave.");
+
+            if (leave.Status == "Approved")
+                throw new BadRequestException(
+                    "Approved leave cannot be cancelled.");
+
+            if (leave.Status == "Rejected")
+                throw new BadRequestException(
+                    "Rejected leave cannot be cancelled.");
+
+            if (leave.Status == "Cancelled")
+                throw new BadRequestException(
+                    "Leave already cancelled.");
+
+            leave.Status = "Cancelled";
+
+            await _leaveRepository.UpdateAsync(leave);
+        }
+
+
         public async Task<LeaveDashboardDto> GetDashboardAsync(Guid employeeId)
         {
             var employee = await _employeeRepository

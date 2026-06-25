@@ -34,6 +34,7 @@ const Dashboard = () => {
   const [balances, setBalances] = useState<LeaveBalance[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState("All");
+  const [cancellingLeaveId, setCancellingLeaveId] = useState<string | null>(null);
 
   const handleLogout = () => {
     logout();
@@ -103,6 +104,22 @@ const Dashboard = () => {
 
   const formatUsedDays = (days: number) => {
     return Number.isInteger(days) ? days.toFixed(2) : `${days}`;
+  };
+
+  const handleCancelLeave = async (leaveId: string) => {
+    setCancellingLeaveId(leaveId);
+    try {
+      await api.put(`/leaves/${leaveId}/cancel`);
+      setLeaves((prev) =>
+        prev.map((leave) =>
+          leave.id === leaveId ? { ...leave, status: "Cancelled" } : leave
+        )
+      );
+    } catch {
+      console.error("Failed to cancel leave request");
+    } finally {
+      setCancellingLeaveId(null);
+    }
   };
 
   return (
@@ -183,12 +200,13 @@ const Dashboard = () => {
                   <th className="th">End Date</th>
                   <th className="th">Reason</th>
                   <th className="th">Status</th>
+                  <th className="th">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td className="td" colSpan={5} style={{ textAlign: "center", padding: 32 }}>
+                    <td className="td" colSpan={6} style={{ textAlign: "center", padding: 32 }}>
                       No leave requests found. Click <strong>+ Apply for Leave</strong> to get started.
                     </td>
                   </tr>
@@ -201,6 +219,20 @@ const Dashboard = () => {
                       <td className="td">{leave.reason}</td>
                       <td className="td">
                         <span className={getStatusBadge(leave.status)}>{leave.status}</span>
+                      </td>
+                      <td className="td">
+                        {leave.status === "Pending" ? (
+                          <button
+                            className="btn btnDanger"
+                            style={{ padding: "6px 12px", fontSize: 13 }}
+                            onClick={() => handleCancelLeave(leave.id)}
+                            disabled={cancellingLeaveId === leave.id}
+                          >
+                            {cancellingLeaveId === leave.id ? "Cancelling..." : "Cancel"}
+                          </button>
+                        ) : (
+                          "-"
+                        )}
                       </td>
                     </tr>
                   ))

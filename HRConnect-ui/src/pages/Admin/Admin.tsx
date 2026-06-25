@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import api from "../../api/axiosInstance";
-import type { AddEmployeeErrors, Employee, PendingLeaveRequest, User } from "../../types";
-import { useNavigate } from "react-router-dom";
+import type { AddEmployeeErrors, AllUser, Employee, PendingLeaveRequest, User } from "../../types";
 
 const Admin = () => {
-  const navigate = useNavigate();
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [allUsers, setAllUsers] = useState<AllUser[]>([]);
 
-  const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
-  const [activeTab, setActiveTab] = useState<"employees" | "leaves"| "allEmployees">("employees");
+  const [leaves, setLeaves] = useState<PendingLeaveRequest[]>([]);
+  const [activeTab, setActiveTab] = useState<"employees" | "leaves" | "allUsers">("employees");
 
 
   const [loading, setLoading] = useState(false);
@@ -45,9 +44,7 @@ const Admin = () => {
   const [editError, setEditError] = useState("");
   const [editing, setEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-
-  
-
+  const [allUsersSearchTerm, setAllUsersSearchTerm] = useState("");
 
   const [editUserOptions, setEditUserOptions] = useState<User[]>([]);
   const [editUsersLoading, setEditUsersLoading] = useState(false);
@@ -65,8 +62,9 @@ const Admin = () => {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [empRes, leaveRes] = await Promise.allSettled([
+        const [empRes, allUsersRes, leaveRes] = await Promise.allSettled([
           api.get("/Employees"),
+          api.get("/Employees/user-report"),
           api.get("/leaves/admin/pending"),
         ]);
 
@@ -75,6 +73,13 @@ const Admin = () => {
         } else {
           console.error("Failed to fetch employees");
           setEmployees([]);
+        }
+
+        if (allUsersRes.status === "fulfilled") {
+          setAllUsers(toArrayData<AllUser>(allUsersRes.value.data));
+        } else {
+          console.error("Failed to fetch all users");
+          setAllUsers([]);
         }
 
         if (leaveRes.status === "fulfilled") {
@@ -91,17 +96,7 @@ const Admin = () => {
     void loadData();
   }, []);
 
-const fetchEmployees = async () => {
-  try {
-    const res = await api.get("/Employees");
-    setEmployees(toArrayData<Employee>(res.data));
-  } catch {
-    console.error("Failed to fetch employees");
-    setEmployees([]);
-  }
-};
-
-const handleEditEmployee = async () => {
+  const handleEditEmployee = async () => {
     setEditing(true);
     setEditError("");
     try {
@@ -133,110 +128,150 @@ const handleEditEmployee = async () => {
     }
   };
 
-const fetchLeaves = async () => {
-  try {
-    const res = await api.get("/leaves/admin/pending");
-    setLeaves(toArrayData<PendingLeaveRequest>(res.data));
-  } catch {
-    console.error("Failed to fetch leaves");
-    setLeaves([]);
-  }
-};
+  const fetchLeaves = async () => {
+    try {
+      const res = await api.get("/leaves/admin/pending");
+      setLeaves(toArrayData<PendingLeaveRequest>(res.data));
+    } catch {
+      console.error("Failed to fetch leaves");
+      setLeaves([]);
+    }
+  };
+
+  const fetchAllUsers = async (searchTerm = "") => {
+    try {
+      const res = await api.get("/Employees/user-report", {
+        params: searchTerm ? { searchTerm } : {},
+      });
+      setAllUsers(toArrayData<AllUser>(res.data));
+    } catch {
+      console.error("Failed to fetch all users");
+      setAllUsers([]);
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
+      try {
+        const [empRes] = await Promise.all([
+          api.get("/Employees"),
+        ]);
+
+        // Supports both [..] and { data: [..] } response shapes.
+        const empData = Array.isArray(empRes.data)
+          ? empRes.data
+          : empRes.data?.data ?? [];
+
+        setEmployees(empData);
+      } catch (err: unknown) {
+        console.error("Failed to fetch data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  const fetchEmployees = async (search = "") => {
     try {
-      const [empRes] = await Promise.all([
-        api.get("/Employees"),
-      ]);
+      const res = await api.get("/Employees", {
+        params: search ? { search } : {},
+      });
+      setEmployees(toArrayData<Employee>(res.data));
 
-      // Supports both [..] and { data: [..] } response shapes.
-      const empData = Array.isArray(empRes.data)
-        ? empRes.data
-        : empRes.data?.data ?? [];
-
-      setEmployees(empData);
-    } catch (err: unknown) {
-      console.error("Failed to fetch data", err);
+    } catch {
+      console.error("Failed to fetch employees");
+      setEmployees([]);
+    }
+  };
+  const fetchAvailableUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const res = await api.get("/Employees/available-users");
+      const userData = toArrayData<User>(res.data);
+      setAvailableUsers(userData);
+    } catch {
+      console.error("Failed to fetch available users");
+      setAvailableUsers([]);
     } finally {
-      setLoading(false);
+      setUsersLoading(false);
+    }
+  };
+  useEffect(() => {
+    const term = searchTerm.trim();
+    if (term.length > 0 && term.length < 3) {
+      return;
+    }
+
+    const delay = setTimeout(() => {
+      fetchEmployees(term);
+    }, 400);
+
+    return () => clearTimeout(delay);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    if (activeTab !== "allUsers") {
+      return;
+    }
+
+    const term = allUsersSearchTerm.trim();
+    if (term.length > 0 && term.length < 3) {
+      return;
+    }
+
+    const delay = setTimeout(() => {
+      void fetchAllUsers(term);
+    }, 400);
+
+    return () => clearTimeout(delay);
+  }, [allUsersSearchTerm, activeTab]);
+
+  const fetchEditUserOptions = async (
+    currentUserId: string,
+    currentFullName: string
+  ) => {
+    setEditUsersLoading(true);
+    const currentUser: User = {
+      id: currentUserId,
+      fullName: currentFullName,
+      email: "",
+      isAdmin: false,
+    };
+
+    try {
+      const res = await api.get("/Employees/available-users");
+      const userData = toArrayData<User>(res.data);
+      const hasCurrentUser = userData.some((user) => user.id === currentUserId);
+
+      setEditUserOptions(
+        hasCurrentUser
+          ? userData
+          : [currentUser, ...userData]
+      );
+    } catch {
+      console.error("Failed to fetch users for edit");
+      setEditUserOptions([currentUser]);
+    } finally {
+      setEditUsersLoading(false);
     }
   };
 
-  loadData();
-}, []);
-
-const fetchEmployees = async (search = "") => {
-  try {
-    const res = await api.get("/Employees", {
-      params: search ? { search } : {},
-    });
-    setEmployees(res.data);
-const fetchAvailableUsers = async () => {
-  setUsersLoading(true);
-  try {
-    const res = await api.get("/Employees/available-users");
-    const userData = toArrayData<User>(res.data);
-    setAvailableUsers(userData);
-  } catch {
-    console.error("Failed to fetch available users");
-    setAvailableUsers([]);
-  } finally {
-    setUsersLoading(false);
-  }
-};
-useEffect(() => {
-  const delay = setTimeout(() => {
-    fetchEmployees(searchTerm);
-  }, 400);
-
-  return () => clearTimeout(delay);
-}, [searchTerm]);
-
-const fetchEditUserOptions = async (
-  currentUserId: string,
-  currentFullName: string
-) => {
-  setEditUsersLoading(true);
-  const currentUser: User = {
-    id: currentUserId,
-    fullName: currentFullName,
-    email: "",
-    isAdmin: false,
-  };
-
-  try {
-    const res = await api.get("/Employees/available-users");
-    const userData = toArrayData<User>(res.data);
-    const hasCurrentUser = userData.some((user) => user.id === currentUserId);
-
-    setEditUserOptions(
-      hasCurrentUser
-        ? userData
-        : [currentUser, ...userData]
-    );
-  } catch {
-    console.error("Failed to fetch users for edit");
-    setEditUserOptions([currentUser]);
-  } finally {
-    setEditUsersLoading(false);
-  }
-};
-
-useEffect(() => {
-  if (showAddForm) {
-    void fetchAvailableUsers();
-  } else {
-    setFieldErrors({
-      userId: "",
-      department: "",
-      designation: "",
-      joiningDate: "",
-    });
-    setAddError("");
-  }
-}, [showAddForm]);
+  useEffect(() => {
+    if (showAddForm) {
+      void fetchAvailableUsers();
+    } else {
+      setFieldErrors({
+        userId: "",
+        department: "",
+        designation: "",
+        joiningDate: "",
+      });
+      setAddError("");
+    }
+  }, [showAddForm]);
 
   const validateAddEmployee = () => {
     const errors: AddEmployeeErrors = {
@@ -286,8 +321,9 @@ useEffect(() => {
       setNewEmployee({ userId: "", department: "", designation: "", joiningDate: "" });
       setFieldErrors({ userId: "", department: "", designation: "", joiningDate: "" });
       fetchEmployees();
+      fetchAllUsers(allUsersSearchTerm);
       fetchAvailableUsers();
-    } catch (err:any) {
+    } catch (err: any) {
       setAddError(err.response?.data?.message || "Failed to add employee.");
     } finally {
       setAdding(false);
@@ -332,11 +368,11 @@ useEffect(() => {
             onClick={() => setActiveTab("employees")}>
             👥 Employees
           </button>
-           <button
-    className={`pill ${activeTab === "allEmployees" ? "pillActive" : ""}`}
-    onClick={() => setActiveTab("allEmployees")}>
-    🧑‍🤝‍🧑 All Employees
-  </button>
+          <button
+            className={`pill ${activeTab === "allUsers" ? "pillActive" : ""}`}
+            onClick={() => setActiveTab("allUsers")}>
+            🧑‍🤝‍🧑 All Users
+          </button>
           <button
             className={`pill ${activeTab === "leaves" ? "pillActive" : ""}`}
             onClick={() => setActiveTab("leaves")}>
@@ -529,14 +565,14 @@ useEffect(() => {
               </div>
             )}
             <div className="searchRow" style={{ marginBottom: 16 }}>
-  <input
-    type="text"
-    className="input"
-    placeholder="Search employees..."
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-  />
-</div>
+              <input
+                type="text"
+                className="input"
+                placeholder="Search employees..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
 
             {/* Employees Table */}
             <div className="tableWrap">
@@ -589,63 +625,69 @@ useEffect(() => {
             </div>
           </div>
         )}
-      {/* All Users Table */}
-      {activeTab === "allEmployees" && (
-<div className="tableWrap" >
-  <table className="table">
-    <thead>
-      <tr>
-        <th className="th">Username</th>
-        <th className="th">Full Name</th>
-        <th className="th">Designation</th>
-        <th className="th">Department</th>
-        <th className="th">Is Employee Added</th>
-        <th className="th">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {employees.length === 0 ? (
-        <tr>
-          <td className="td" colSpan={6} style={{ textAlign: "center" }}>
-            No employees found
-          </td>
-        </tr>
-      ) : (
-        employees.map((user) => (
-          <tr key={user.id}>
-            {/* <td className="td">{user.username}</td> */}
-            <td className="td">{user.fullName}</td>
-            <td className="td">{user.designation || "-"}</td>
-            <td className="td">{user.department || "-"}</td>
-            {/* <td className="td">{user.isEmployeeAdded ? "✅ Yes" : "❌ No"}</td> */}
-            {/* <td className="td">
-              {!user.isEmployeeAdded && (
-                <button
-                  className="btn btnGhost"
-                  style={{ padding: "6px 12px", fontSize: 13 }}
-                  onClick={() => {
-                    setEditEmployee({
-                      id: 0,
-                      userId: user.id,
-                      department: "",
-                      designation: "",
-                      joiningDate: "",
-                      fullName: user.fullName,
-                    });
-                    setShowEditForm(true);
-                    setAddError("");
-                  }}
-                >
-                  ➕ Add Employee
-                </button>
-              )}
-            </td> */}
-          </tr>
-        ))
-      )}
-    </tbody>
-  </table>
-</div>)}
+        {/* All Users Table */}
+        {activeTab === "allUsers" && (
+          <div>
+            <div className="searchRow" style={{ marginBottom: 16 }}>
+              <input
+                type="text"
+                className="input"
+                placeholder="Search users..."
+                value={allUsersSearchTerm}
+                onChange={(e) => setAllUsersSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="tableWrap" >
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th className="th">Username</th>
+                    <th className="th">Full Name</th>
+                    <th className="th">Designation</th>
+                    <th className="th">Department</th>
+                    <th className="th">Is Employee Created</th>
+                    <th className="th">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allUsers.length === 0 ? (
+                    <tr>
+                      <td className="td" colSpan={6} style={{ textAlign: "center" }}>
+                        No users found
+                      </td>
+                    </tr>
+                  ) : (
+                    allUsers.map((user) => (
+                      <tr key={user.id}>
+                        <td className="td">{user.email}</td>
+                        <td className="td">{user.fullName}</td>
+                        <td className="td">{user.designation || "-"}</td>
+                        <td className="td">{user.department || "-"}</td>
+                        <td className="td">{user.isEmployeeCreated ? "✅ Yes" : "❌ No"}</td>
+                        <td className="td">
+                          {!user.isEmployeeCreated && (
+                            <button
+                              className="btn btnGhost"
+                              style={{ padding: "6px 12px", fontSize: 13 }}
+                              onClick={() => {
+                                setActiveTab("employees");
+                                setShowEditForm(false);
+                                setShowAddForm(true);
+                                setNewEmployee((prev) => ({ ...prev, userId: user.id }));
+                                setAddError("");
+                              }}
+                            >
+                              ➕ Add Employee
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>)}
 
         {/* Leaves Tab */}
         {activeTab === "leaves" && (
