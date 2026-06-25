@@ -198,6 +198,7 @@ const Dashboard = () => {
                   <th className="th">Leave Type</th>
                   <th className="th">Start Date</th>
                   <th className="th">End Date</th>
+                  <th className="th">No of Days</th>
                   <th className="th">Reason</th>
                   <th className="th">Status</th>
                   <th className="th">Actions</th>
@@ -216,6 +217,7 @@ const Dashboard = () => {
                       <td className="td">{leave.leaveType}</td>
                       <td className="td">{leave.startDate?.split("T")[0]}</td>
                       <td className="td">{leave.endDate?.split("T")[0]}</td>
+                      <td className="td">{leave.totalDays}</td>
                       <td className="td">{leave.reason}</td>
                       <td className="td">
                         <span className={getStatusBadge(leave.status)}>{leave.status}</span>

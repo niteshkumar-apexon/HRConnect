@@ -48,7 +48,7 @@ const Leaves = () => {
   const fetchAvailableLeaveTypes = async () => {
     setLeaveTypesLoading(true);
     try {
-      const res = await api.get("/leaves/available-leave-types");
+      const res = await api.get("/leaves/leave-balance");
       const leaveTypes = Array.isArray(res.data)
         ? res.data
         : res.data?.data ?? [];

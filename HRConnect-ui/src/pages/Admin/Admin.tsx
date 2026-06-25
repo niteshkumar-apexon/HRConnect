@@ -338,6 +338,13 @@ const Admin = () => {
   };
 
   const handleLeaveStatus = async (id: string, status: string) => {
+    if (status === "Rejected") {
+      const confirmed = window.confirm("Are you sure you want to reject this leave request?");
+      if (!confirmed) {
+        return;
+      }
+    }
+
     try {
       await api.put(`/leaves/${id}/status`, { status });
       fetchLeaves();
@@ -717,6 +724,7 @@ const Admin = () => {
                     <th className="th">Type</th>
                     <th className="th">Start</th>
                     <th className="th">End</th>
+                    <th className="th">No Of Days</th>
                     <th className="th">Status</th>
                     <th className="th">Actions</th>
                   </tr>
@@ -731,6 +739,7 @@ const Admin = () => {
                         <td className="td">{leave.leaveType}</td>
                         <td className="td">{leave.startDate?.split("T")[0]}</td>
                         <td className="td">{leave.endDate?.split("T")[0]}</td>
+                        <td className="td">{leave.totalDays}</td>
                         <td className="td">
                           <span className={getStatusBadge(leave.status)}>
                             {leave.status}

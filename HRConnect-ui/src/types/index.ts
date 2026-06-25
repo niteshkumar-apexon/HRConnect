@@ -29,6 +29,7 @@ export interface LeaveRequest {
   leaveType: string;
   startDate: string;
   endDate: string;
+  totalDays: number;
   status: 'Pending' | 'Approved' | 'Rejected' | 'Cancelled';
   reason: string;
 }
