@@ -1,4 +1,6 @@
-﻿using HRConnect.Application.DTO.Leave;
+﻿using HRConnect.Application.Common;
+using HRConnect.Application.DTO;
+using HRConnect.Application.DTO.Leave;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +19,8 @@ namespace HRConnect.Application.Interfaces.Services
         Task<LeaveResponseDto> ApplyLeaveAsync(Guid userId, CreateLeaveRequestDto dto);
 
         Task<List<LeaveResponseDto>> GetMyLeavesAsync(Guid userId);
+
+        //Task<PagedResponse<LeaveResponseDto>>GetMyLeavesAsync(Guid userId, LeaveSearchRequestDto request);
 
         Task UpdateLeaveStatusAsync(Guid leaveId, string status);
 
