@@ -1,4 +1,7 @@
-﻿using HRConnect.Application.Interfaces.Repositories;
+﻿using HRConnect.Application.Common;
+using HRConnect.Application.DTO;
+using HRConnect.Application.DTO.Leave;
+using HRConnect.Application.Interfaces.Repositories;
 using HRConnect.Domain.Entities;
 using HRConnect.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +41,57 @@ namespace HRConnect.Infrastructure.Repositories
                 .OrderByDescending(x => x.CreatedDate)
                 .ToListAsync();
         }
+
+        //public async Task<PagedResponse<LeaveResponseDto>> GetPagedLeavesAsync(Guid employeeId, LeaveSearchRequestDto request)
+        //{
+        //    var query =
+        //        _context.LeaveRequests
+        //            .Include(x => x.Employee)
+        //            .ThenInclude(x => x.User)
+        //            .Where(x => x.EmployeeId == employeeId)
+        //            .AsQueryable();
+
+        //    // Search
+        //    if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        //    {
+        //        query = query.Where(x =>
+        //            x.LeaveType.Contains(request.SearchTerm) ||
+        //            x.Reason.Contains(request.SearchTerm));
+        //    }
+
+        //    var totalRecords =
+        //        await query.CountAsync();
+
+        //    var leaves =
+        //        await query
+        //            .OrderByDescending(x => x.CreatedDate)
+        //            .Skip((request.PageNumber - 1) * request.PageSize)
+        //            .Take(request.PageSize)
+        //            .Select(x => new LeaveResponseDto
+        //            {
+        //                Id = x.Id,
+        //                EmployeeId = x.EmployeeId,
+        //                EmployeeName =
+        //                    x.Employee.User.FullName,
+
+        //                LeaveType = x.LeaveType,
+        //                StartDate = x.StartDate,
+        //                EndDate = x.EndDate,
+        //                TotalDays = x.NumberofDays,
+        //                Reason = x.Reason,
+        //                Status = x.Status,
+        //                //CreatedDate = x.CreatedDate
+        //            })
+        //            .ToListAsync();
+
+        //        return new PagedResponse<LeaveResponseDto>
+        //        {
+        //            Data = leaves,
+        //            TotalRecords = totalRecords,
+        //            PageNumber = request.PageNumber,
+        //            PageSize = request.PageSize
+        //        };
+        //}
 
         public async Task<List<LeaveRequest>> GetPendingAsync()
         {

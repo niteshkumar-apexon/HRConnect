@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using HRConnect.Application.Common;
 using HRConnect.Application.DTO;
 using HRConnect.Application.DTO.Leave;
 using HRConnect.Application.Exceptions;
@@ -128,6 +129,22 @@ namespace HRConnect.Application.Interfaces.Services
 
             return _mapper.Map<List<LeaveResponseDto>>(leaves);
         }
+
+        //public async Task<PagedResponse<LeaveResponseDto>> GetMyLeavesAsync(Guid userId, LeaveSearchRequestDto request)
+        //{
+        //    var employee =
+        //        await _employeeRepository
+        //            .GetByUserIdAsync(userId);
+
+        //    if (employee == null)
+        //        throw new NotFoundException(
+        //            "Employee not found");
+
+        //    return await _leaveRepository
+        //        .GetPagedLeavesAsync(
+        //            employee.Id,
+        //            request);
+        //}
 
         public async Task<List<LeaveResponseDto>> GetPendingLeavesAsync()
         {

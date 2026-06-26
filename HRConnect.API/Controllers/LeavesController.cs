@@ -1,4 +1,5 @@
 ﻿using HRConnect.API.CommonHelper;
+using HRConnect.Application.DTO;
 using HRConnect.Application.DTO.Leave;
 using HRConnect.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -55,12 +56,22 @@ namespace HRConnect.API.Controllers
         {
             //var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-            var userId = User.GetUserId();           
+            var userId = User.GetUserId();
 
             var leaves = await _leaveService.GetMyLeavesAsync(userId);
 
             return Ok(leaves);
         }
+
+        //[HttpGet("mine")]
+        //public async Task<IActionResult> GetMyLeaves([FromQuery] LeaveSearchRequestDto request)
+        //{
+        //    var userId = User.GetUserId();
+
+        //    var result = await _leaveService.GetMyLeavesAsync(userId, request);
+
+        //    return Ok(result);
+        //}
 
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}/status")]
@@ -94,7 +105,7 @@ namespace HRConnect.API.Controllers
 
 
         [Authorize]
-        [HttpGet("available-leave-types")]
+        [HttpGet("leave-balance")]
         public async Task<IActionResult> GetAvailableLeaveTypes()
         {
             //var userId = Guid.Parse(
