@@ -21,7 +21,7 @@ test.describe('Auth flows', () => {
   test('shows validation errors on empty login form', async ({ page }) => {
     await page.click('button:has-text("Login")');
     await expect(page.locator('text=Email is required')).toBeVisible();
-    await expect(page.locator('text=Password is required')).toBeVisible();
+    await expect(page.locator('text=Password is requi.red')).toBeVisible();
   });
 
   test('shows validation error for invalid login email', async ({ page }) => {
