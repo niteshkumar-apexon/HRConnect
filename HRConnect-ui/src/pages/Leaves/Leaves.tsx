@@ -67,67 +67,113 @@ const Leaves = () => {
 
   // ================= DATE VALIDATION =================
   const today = new Date();
-today.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
 
-const minDate = new Date();
-minDate.setHours(0, 0, 0, 0);
-minDate.setDate(minDate.getDate() - 15);
-
-
-const minDateString = [
-  minDate.getFullYear(),
-  String(minDate.getMonth() + 1).padStart(2, "0"),
-  String(minDate.getDate()).padStart(2, "0"),
-].join("-");
-
-const start = startDate ? new Date(startDate) : null;
-const end = endDate ? new Date(endDate) : null;
+  const minDate = new Date();
+  minDate.setHours(0, 0, 0, 0);
+  minDate.setDate(minDate.getDate() - 15);
 
 
-const isDateValid =
-  !!start &&
-  !!end &&
-  start >= minDate &&
-  end >= start;
+  const minDateString = [
+    minDate.getFullYear(),
+    String(minDate.getMonth() + 1).padStart(2, "0"),
+    String(minDate.getDate()).padStart(2, "0"),
+  ].join("-");
+
+  const start = startDate ? new Date(startDate) : null;
+  const end = endDate ? new Date(endDate) : null;
 
 
-const reasonValid = reason.trim().length >= 10;
+  const isDateValid =
+    !!start &&
+    !!end &&
+    start >= minDate &&
+    end >= start;
 
 
-const isFormValid =
-  !!leaveType &&
-  isDateValid &&
-  reasonValid;
+  const reasonValid = reason.trim().length >= 10;
+
+
+  const isFormValid =
+    !!leaveType &&
+    isDateValid &&
+    reasonValid;
 
   // ================= DAYS CALCULATION =================
+
+  const isWeekend = (date: Date) => {
+    return (
+      date.getDay() === 0 || // Sunday
+      date.getDay() === 6    // Saturday
+    );
+  };
+
+  // const calculateDays = () => {
+  //   if (!startDate || !endDate) return 0;
+
+  //   const startD = new Date(startDate);
+  //   const endD = new Date(endDate);
+
+  //   let days =
+  //     (endD.getTime() - startD.getTime()) /
+  //       (1000 * 60 * 60 * 24) +
+  //     1;
+
+  //   if (days <= 0) return 0;
+
+  //   if (startDate === endDate) {
+  //     if (firstHalf || secondHalf) return 0.5;
+  //     return 1;
+  //   }
+
+  //   if (firstDaySecondHalf) days -= 0.5;
+  //   if (lastDayFirstHalf) days -= 0.5;
+
+  //   return days;
+  // };
+
   const calculateDays = () => {
     if (!startDate || !endDate) return 0;
 
-    const startD = new Date(startDate);
-    const endD = new Date(endDate);
+    const start = new Date(startDate);
+    const end = new Date(endDate);
 
-    let days =
-      (endD.getTime() - startD.getTime()) /
-        (1000 * 60 * 60 * 24) +
-      1;
+    if (start > end) return 0;
 
-    if (days <= 0) return 0;
+    // Same day leave
+    if (start.toDateString() === end.toDateString()) {
+      if (isWeekend(start)) return 0;
 
-    if (startDate === endDate) {
-      if (firstHalf || secondHalf) return 0.5;
+      if (firstHalf || secondHalf)
+        return 0.5;
+
       return 1;
     }
 
-    if (firstDaySecondHalf) days -= 0.5;
-    if (lastDayFirstHalf) days -= 0.5;
+    let totalDays = 0;
 
-    return days;
+    const current = new Date(start);
+
+    while (current <= end) {
+      if (!isWeekend(current)) {
+        totalDays++;
+      }
+
+      current.setDate(current.getDate() + 1);
+    }
+
+    if (firstDaySecondHalf)
+      totalDays -= 0.5;
+
+    if (lastDayFirstHalf)
+      totalDays -= 0.5;
+
+    return totalDays;
   };
 
   const numberOfDays = calculateDays();
 
-const isSingleDayLeave =
-  startDate && endDate && startDate === endDate;
+  const isSingleDayLeave = startDate && endDate && startDate === endDate;
 
   const handleBack = () => {
     navigate("/dashboard");
@@ -185,7 +231,7 @@ const isSingleDayLeave =
         return "badge badgePending";
     }
   };
-  
+
 
   return (
     <div className="page">
@@ -246,14 +292,14 @@ const isSingleDayLeave =
               value={leaveType}
               onChange={(e) => setLeaveType(e.target.value)}>
 
-                <option value="" style={{ color: "#000" }}>
-                  {leaveTypesLoading ? "Loading leave types..." : "Select leave type"}
+              <option value="" style={{ color: "#000" }}>
+                {leaveTypesLoading ? "Loading leave types..." : "Select leave type"}
+              </option>
+              {availableLeaveTypes.map((type) => (
+                <option key={type.leaveType} value={type.leaveType} style={{ color: "#000" }}>
+                  {type.leaveType} ({type.remainingDays} days available)
                 </option>
-                {availableLeaveTypes.map((type) => (
-                  <option key={type.leaveType} value={type.leaveType} style={{ color: "#000" }}>
-                    {type.leaveType} ({type.remainingDays} days available)
-                  </option>
-                ))}
+              ))}
 
             </select>
           </div>
@@ -265,7 +311,7 @@ const isSingleDayLeave =
               className="input"
               type="date"
               value={startDate}
-               min={minDateString}
+              min={minDateString}
               onChange={(e) => setStartDate(e.target.value)}
             />
           </div>
@@ -277,67 +323,67 @@ const isSingleDayLeave =
               className="input"
               type="date"
               value={endDate}
-               min={minDateString}
+              min={minDateString}
               onChange={(e) => setEndDate(e.target.value)}
             />
           </div>
         </div>
 
-       {/* CHECKBOXES */}
-       <div
-  style={{
-    display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
-    marginTop: "20px",
-    marginBottom: "20px",
-  }}
->
-  {/* SINGLE DAY OPTIONS */}
-  <label>
-    <input
-      type="checkbox"
-      checked={firstHalf}
-      disabled={!isSingleDayLeave}
-      onChange={(e) => setFirstHalf(e.target.checked)}
-    />
-    First Half
-  </label>
+        {/* CHECKBOXES */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            marginTop: "20px",
+            marginBottom: "20px",
+          }}
+        >
+          {/* SINGLE DAY OPTIONS */}
+          <label>
+            <input
+              type="checkbox"
+              checked={firstHalf}
+              disabled={!isSingleDayLeave}
+              onChange={(e) => setFirstHalf(e.target.checked)}
+            />
+            First Half
+          </label>
 
-  <label>
-    <input
-      type="checkbox"
-      checked={secondHalf}
-      disabled={!isSingleDayLeave}
-      onChange={(e) => setSecondHalf(e.target.checked)}
-    />
-    Second Half
-  </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={secondHalf}
+              disabled={!isSingleDayLeave}
+              onChange={(e) => setSecondHalf(e.target.checked)}
+            />
+            Second Half
+          </label>
 
-  {/* MULTI DAY OPTIONS */}
-  <label>
-    <input
-      type="checkbox"
-      checked={firstDaySecondHalf}
-      disabled={isSingleDayLeave || numberOfDays < 2}
-      onChange={(e) =>
-        setFirstDaySecondHalf(e.target.checked)
-      }
-    />
-    First Day Second Half
-  </label>
+          {/* MULTI DAY OPTIONS */}
+          <label>
+            <input
+              type="checkbox"
+              checked={firstDaySecondHalf}
+              disabled={isSingleDayLeave || numberOfDays < 2}
+              onChange={(e) =>
+                setFirstDaySecondHalf(e.target.checked)
+              }
+            />
+            First Day Second Half
+          </label>
 
-  <label>
-    <input
-      type="checkbox"
-      checked={lastDayFirstHalf}
-      disabled={isSingleDayLeave || numberOfDays < 2}
-      onChange={(e) =>
-        setLastDayFirstHalf(e.target.checked)
-      }
-    />
-    Last Day First Half
-  </label>
-</div>
+          <label>
+            <input
+              type="checkbox"
+              checked={lastDayFirstHalf}
+              disabled={isSingleDayLeave || numberOfDays < 2}
+              onChange={(e) =>
+                setLastDayFirstHalf(e.target.checked)
+              }
+            />
+            Last Day First Half
+          </label>
+        </div>
 
         {/* DAYS */}
         <div style={{ maxWidth: "300px", marginBottom: "20px" }}>
@@ -390,7 +436,7 @@ const isSingleDayLeave =
                   leaves.map((leave) => (
                     <tr key={leave.id}>
                       <td className="td">{leave.leaveType}</td>
-                     <td className="td">{leave.startDate?.split("T")[0]}</td>
+                      <td className="td">{leave.startDate?.split("T")[0]}</td>
                       <td className="td">{leave.endDate?.split("T")[0]}</td>
                       <td className="td">{leave.reason}</td>
                       <td className="td">

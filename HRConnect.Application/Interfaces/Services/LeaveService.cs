@@ -250,8 +250,7 @@ namespace HRConnect.Application.Interfaces.Services
 
         public async Task<LeaveDashboardDto> GetDashboardAsync(Guid employeeId)
         {
-            var employee = await _employeeRepository
-        .GetByUserIdAsync(employeeId);
+            var employee = await _employeeRepository.GetByUserIdAsync(employeeId);
 
             if (employee == null)
             {
@@ -297,27 +296,45 @@ namespace HRConnect.Application.Interfaces.Services
             // Same day leave
             if (dto.StartDate.Date == dto.EndDate.Date)
             {
-                if (dto.FirstHalf == true || dto.SecondHalf == true)
-                {
+                // Cannot apply leave on weekends
+                if (IsWeekend(dto.StartDate))
+                    throw new BadRequestException("Cannot apply leave on Saturday or Sunday.");
+
+                if (dto.FirstHalf || dto.SecondHalf)
                     return 0.5M;
-                }
+
                 return 1M;
             }
 
-            // Multiple days leave
-            decimal days = (dto.EndDate - dto.StartDate).Days + 1;
+            decimal totalDays = 0;
 
-            if (dto.FirstDaySecondHalf == true)
+            DateTime current = dto.StartDate.Date;
+
+            while (current <= dto.EndDate.Date)
             {
-                days -= 0.5M;
+                if (!IsWeekend(current))
+                {
+                    totalDays++;
+                }
+
+                current = current.AddDays(1);
             }
 
-            if (dto.LastDayFirstHalf == true)
-            {
-                days -= 0.5M;
-            }
+            // First working day second half
+            if (dto.FirstDaySecondHalf)
+                totalDays -= 0.5M;
 
-            return days;
+            // Last working day first half
+            if (dto.LastDayFirstHalf)
+                totalDays -= 0.5M;
+
+            return totalDays;
         }
+
+        private bool IsWeekend(DateTime date)
+        {
+            return date.DayOfWeek == DayOfWeek.Saturday ||
+                   date.DayOfWeek == DayOfWeek.Sunday;
+        }        
     }
 }
