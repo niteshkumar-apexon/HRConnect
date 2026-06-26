@@ -1,6 +1,8 @@
-﻿namespace HRConnect.Domain.Entities;
+﻿using HRConnect.Domain.Common;
 
-public class User
+namespace HRConnect.Domain.Entities;
+
+public class User : BaseAuditableEntity
 {
     public Guid Id { get; set; }
 

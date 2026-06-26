@@ -90,6 +90,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
@@ -98,6 +100,8 @@ builder.Services.AddScoped<ILeaveService, LeaveService>();
 
 builder.Services.AddScoped<ILeaveBalanceRepository, LeaveBalanceRepository>();
 builder.Services.AddScoped<IUserRepository, EmployeeRepository>();
+
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

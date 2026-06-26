@@ -13,14 +13,22 @@ namespace HRConnect.Application.Mappings
                 .ForMember(x => x.Id, opt => opt.Ignore())
                 .ForMember(x => x.User, opt => opt.Ignore())
                 .ForMember(x => x.LeaveRequests, opt => opt.Ignore())
-                .ForMember(x => x.LeaveBalances, opt => opt.Ignore());
+                .ForMember(x => x.LeaveBalances, opt => opt.Ignore())
+                .ForMember(x => x.CreatedDate, opt => opt.Ignore())
+                .ForMember(x => x.CreatedBy, opt => opt.Ignore())
+                .ForMember(x => x.ModifiedDate, opt => opt.Ignore())
+                .ForMember(x => x.ModifiedBy, opt => opt.Ignore());
 
             CreateMap<UpdateEmployeeDto, Employee>()
                 .ForMember(x => x.Id, opt => opt.Ignore())
                 .ForMember(x => x.UserId, opt => opt.Ignore())
                 .ForMember(x => x.User, opt => opt.Ignore())
                 .ForMember(x => x.LeaveRequests, opt => opt.Ignore())
-                .ForMember(x => x.LeaveBalances, opt => opt.Ignore());
+                .ForMember(x => x.LeaveBalances, opt => opt.Ignore())
+                .ForMember(x => x.CreatedDate, opt => opt.Ignore())
+                .ForMember(x => x.CreatedBy, opt => opt.Ignore())
+                .ForMember(x => x.ModifiedDate, opt => opt.Ignore())
+                .ForMember(x => x.ModifiedBy, opt => opt.Ignore());
 
             CreateMap<Employee, EmployeeResponseDto>()
                 .ForMember(

@@ -1,5 +1,6 @@
 ﻿using HRConnect.Application.DTO;
 using HRConnect.Application.DTO.Employee;
+using HRConnect.Application.DTO.User;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +24,10 @@ namespace HRConnect.Application.Interfaces.Services
         Task<List<EmployeeResponseDto>> SearchEmployeesAsync(string? search, string? department, string? designation);
 
         Task<List<UserDropdownDto>> GetAvailableUsersAsync();
+
+        //Task<List<UserEmployeeReportDto>> GetUserEmployeeReportAsync();
+
+        Task<List<UserEmployeeReportDto>>GetUserEmployeeReportAsync(string? searchTerm);
     }
 
 }

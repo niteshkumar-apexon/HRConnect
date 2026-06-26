@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using HRConnect.Application.DTO;
 using HRConnect.Application.DTO.Employee;
+using HRConnect.Application.DTO.User;
 using HRConnect.Application.Exceptions;
 using HRConnect.Application.Interfaces.Repositories;
 using HRConnect.Domain.Entities;
@@ -170,6 +171,11 @@ namespace HRConnect.Application.Interfaces.Services
                     FullName = x.FullName,
                     Email = x.Email
                 }).ToList();
+        }
+
+        public async Task<List<UserEmployeeReportDto>> GetUserEmployeeReportAsync(string? searchTerm)
+        {
+            return await _userRepository.GetUserEmployeeReportAsync(searchTerm);
         }
     }
 }

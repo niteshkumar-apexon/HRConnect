@@ -1,4 +1,5 @@
-﻿using HRConnect.Domain.Entities;
+﻿using HRConnect.Application.DTO.User;
+using HRConnect.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +11,7 @@ namespace HRConnect.Application.Interfaces.Repositories
     public interface IUserRepository
     {
         Task<List<User>> GetUsersWithoutEmployeeAsync();
+
+        Task<List<UserEmployeeReportDto>> GetUserEmployeeReportAsync(string? searchTerm);
     }
 }

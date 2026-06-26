@@ -35,7 +35,7 @@ namespace HRConnect.Infrastructure.Repositories
                 .Include(x => x.Employee)
                 .ThenInclude(x => x.User)
                 .Where(x => x.EmployeeId == employeeId)
-                //.OrderByDescending(x => x.CreatedOn)
+                .OrderByDescending(x => x.CreatedDate)
                 .ToListAsync();
         }
 
@@ -45,7 +45,7 @@ namespace HRConnect.Infrastructure.Repositories
                 .Include(x => x.Employee)
                 .ThenInclude(x => x.User)
                 .Where(x => x.Status == "Pending")
-                //.OrderByDescending(x => x.CreatedOn)
+                .OrderByDescending(x => x.CreatedDate)
                 .ToListAsync();
         }
 
@@ -54,7 +54,7 @@ namespace HRConnect.Infrastructure.Repositories
             return await _context.LeaveRequests
                 .Include(x => x.Employee)
                 .ThenInclude(x => x.User)
-                .OrderByDescending(x => x.StartDate)
+                .OrderByDescending(x => x.CreatedDate)
                 .ToListAsync();
         }
 

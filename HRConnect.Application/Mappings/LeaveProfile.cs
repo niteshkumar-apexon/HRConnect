@@ -18,7 +18,11 @@ namespace HRConnect.Application.Mappings
                 .ForMember(x => x.EmployeeId, opt => opt.Ignore())
                 .ForMember(x => x.Status, opt => opt.Ignore())
                 .ForMember(x => x.NumberofDays, opt => opt.Ignore())
-                .ForMember(x => x.Employee, opt => opt.Ignore());
+                .ForMember(x => x.Employee, opt => opt.Ignore())
+                .ForMember(x => x.CreatedDate, opt => opt.Ignore())
+                .ForMember(x => x.CreatedBy, opt => opt.Ignore())
+                .ForMember(x => x.ModifiedDate, opt => opt.Ignore())
+                .ForMember(x => x.ModifiedBy, opt => opt.Ignore());
 
             CreateMap<LeaveRequest, LeaveResponseDto>()
                 .ForMember(
