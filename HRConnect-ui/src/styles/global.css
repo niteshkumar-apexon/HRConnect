@@ -94,6 +94,12 @@ a:hover{opacity:.9; text-decoration:underline;}
 }
 .input:focus, .select:focus, .textarea:focus{border-color: rgba(24,144,255,.65); box-shadow: 0 0 0 3px rgba(24,144,255,.20);}
 
+.input[type="date"]::-webkit-calendar-picker-indicator{
+  filter: invert(1);
+  opacity: 1;
+  cursor: pointer;
+}
+
 .btn{
   display:inline-flex;
   align-items:center;
