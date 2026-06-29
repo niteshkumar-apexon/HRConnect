@@ -315,6 +315,12 @@ const Admin = () => {
     return !Object.values(errors).some(Boolean);
   };
 
+  const isAddEmployeeFormValid =
+  newEmployee.userId.trim() !== "" &&
+  newEmployee.department.trim() !== "" &&
+  newEmployee.designation.trim() !== "" &&
+  newEmployee.joiningDate !== "" &&
+  new Date(newEmployee.joiningDate) <= new Date();
   const handleAddEmployee = async () => {
     if (!validateAddEmployee()) {
       return;
@@ -439,7 +445,7 @@ const Admin = () => {
                         {usersLoading ? "Loading users..." : "Select user"}
                       </option>
                       {availableUsers.map((user) => (
-                        <option key={user.id} value={user.id}>
+                        <option key={user.id} value={user.id} style={{ color: "#000" }}>
                           {user.fullName} ({user.email})
                         </option>
                       ))}
@@ -500,7 +506,7 @@ const Admin = () => {
                   </div>
                 </div>
                 <div className="btnRow" style={{ marginTop: 16 }}>
-                  <button className="btn btnSuccess" onClick={handleAddEmployee} disabled={adding}>
+                  <button className="btn btnSuccess" onClick={handleAddEmployee} disabled={adding || !isAddEmployeeFormValid}>
                     {adding ? "Adding..." : "✅ Add Employee"}
                   </button>
                   <button className="btn btnGhost" onClick={() => setShowAddForm(false)}>

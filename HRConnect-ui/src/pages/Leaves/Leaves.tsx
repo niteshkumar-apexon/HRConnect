@@ -31,6 +31,7 @@ const Leaves = () => {
 
   const [submitting, setSubmitting] = useState(false);
 
+  const [expandedReasonId, setExpandedReasonId] = useState<string | null>(null);
   const fetchLeaves = async () => {
     setLoading(true);
     setError("");
@@ -438,7 +439,52 @@ const Leaves = () => {
                       <td className="td">{leave.leaveType}</td>
                       <td className="td">{leave.startDate?.split("T")[0]}</td>
                       <td className="td">{leave.endDate?.split("T")[0]}</td>
-                      <td className="td">{leave.reason}</td>
+                     <td className="td">
+  {expandedReasonId === leave.id ? (
+    <>
+      {leave.reason}{" "}
+      <button
+        type="button"
+        onClick={() => setExpandedReasonId(null)}
+        style={{
+          background: "none",
+          border: "none",
+          color: "#2563eb",
+          cursor: "pointer",
+          padding: 0,
+          marginLeft: "6px",
+          textDecoration: "underline",
+        }}
+      >
+        View Less
+      </button>
+    </>
+  ) : (
+    <>
+      {leave.reason.length > 30
+        ? `${leave.reason.substring(0, 30)}...`
+        : leave.reason}
+
+      {leave.reason.length > 30 && (
+        <button
+          type="button"
+          onClick={() => setExpandedReasonId(leave.id)}
+          style={{
+            background: "none",
+            border: "none",
+            color: "#2563eb",
+            cursor: "pointer",
+            padding: 0,
+            marginLeft: "6px",
+            textDecoration: "underline",
+          }}
+        >
+          View More
+        </button>
+      )}
+    </>
+  )}
+</td>
                       <td className="td">
                         <span className={getStatusBadgeClass(leave.status)}>
                           {leave.status}
