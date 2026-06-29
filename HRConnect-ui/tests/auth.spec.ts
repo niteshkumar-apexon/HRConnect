@@ -21,12 +21,12 @@ test.describe('Auth flows', () => {
   test('shows validation errors on empty login form', async ({ page }) => {
     await page.click('button:has-text("Login")');
     await expect(page.locator('text=Email is required')).toBeVisible();
-    await expect(page.locator('text=Password is requi.red')).toBeVisible();
+    await expect(page.locator('text=Password is required')).toBeVisible();
   });
 
   test('shows validation error for invalid login email', async ({ page }) => {
-    await page.getByLabel('Email').fill('invalid-email');
-    await page.getByLabel('Password').fill('securePass1');
+    await page.locator('input[type="email"]').fill('invalid-email');
+    await page.locator('input[type="password"]').fill('securePass1');
     await page.click('button:has-text("Login")');
     await expect(page.locator('text=Enter a valid email address')).toBeVisible();
   });
@@ -46,8 +46,8 @@ test.describe('Auth flows', () => {
       })
     );
 
-    await page.getByLabel('Email').fill('testuser@example.com');
-    await page.getByLabel('Password').fill('SecurePass123');
+    await page.locator('input[type="email"]').fill('testuser@example.com');
+    await page.locator('input[type="password"]').fill('SecurePass123');
     await page.click('button:has-text("Login")');
     await expect(page).toHaveURL(/\/dashboard$/);
   });
@@ -55,18 +55,18 @@ test.describe('Auth flows', () => {
   test('shows registration validation errors for empty form', async ({ page }) => {
     await page.goto('/register');
     await page.click('button:has-text("Register")');
-    await expect(page.locator('text=Full Name is required')).toBeVisible();
-    await expect(page.locator('text=Email is required')).toBeVisible();
-    await expect(page.locator('text=Password is required')).toBeVisible();
-    await expect(page.locator('text=Confirm Password is required')).toBeVisible();
+    await expect(page.getByText('Full Name is required', { exact: true })).toBeVisible();
+    await expect(page.getByText('Email is required', { exact: true })).toBeVisible();
+    await expect(page.getByText('Password is required', { exact: true })).toBeVisible();
+    await expect(page.getByText('Confirm Password is required', { exact: true })).toBeVisible();
   });
 
   test('shows password mismatch validation on registration', async ({ page }) => {
     await page.goto('/register');
-    await page.getByLabel('Full Name').fill('Test User');
-    await page.getByLabel('Email').fill('testuser@example.com');
-    await page.getByLabel('Password').fill('password123');
-    await page.getByLabel('Confirm Password').fill('password321');
+    await page.locator('input[type="text"]').fill('Test User');
+    await page.locator('input[type="email"]').fill('testuser@example.com');
+    await page.locator('input[type="password"]').nth(0).fill('password123');
+    await page.locator('input[type="password"]').nth(1).fill('password321');
     await page.click('button:has-text("Register")');
     await expect(page.locator('text=Passwords do not match')).toBeVisible();
   });
@@ -81,10 +81,10 @@ test.describe('Auth flows', () => {
       })
     );
 
-    await page.getByLabel('Full Name').fill('Test User');
-    await page.getByLabel('Email').fill('newuser@example.com');
-    await page.getByLabel('Password').fill('SecurePass123');
-    await page.getByLabel('Confirm Password').fill('SecurePass123');
+    await page.locator('input[type="text"]').fill('Test User');
+    await page.locator('input[type="email"]').fill('newuser@example.com');
+    await page.locator('input[type="password"]').nth(0).fill('SecurePass123');
+    await page.locator('input[type="password"]').nth(1).fill('SecurePass123');
     await page.click('button:has-text("Register")');
     await expect(page).toHaveURL(/\/login$/);
   });
