@@ -106,6 +106,12 @@ const Dashboard = () => {
     return Number.isInteger(days) ? days.toFixed(2) : `${days}`;
   };
 
+  const formatDate = (date?: string) => {
+    if (!date) return "";
+    const [year, month, day] = date.split("T")[0].split("-");
+    return `${day}-${month}-${year}`;
+  };
+
   const handleCancelLeave = async (leaveId: string) => {
     setCancellingLeaveId(leaveId);
     try {
@@ -215,8 +221,8 @@ const Dashboard = () => {
                   filtered.map((leave) => (
                     <tr key={leave.id}>
                       <td className="td">{leave.leaveType}</td>
-                      <td className="td">{leave.startDate?.split("T")[0]}</td>
-                      <td className="td">{leave.endDate?.split("T")[0]}</td>
+                      <td className="td">{formatDate(leave.startDate)}</td>
+                      <td className="td">{formatDate(leave.endDate)}</td>
                       <td className="td">{leave.totalDays}</td>
                       <td className="td">{leave.reason}</td>
                       <td className="td">
