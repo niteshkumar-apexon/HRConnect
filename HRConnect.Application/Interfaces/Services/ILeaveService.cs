@@ -29,5 +29,7 @@ namespace HRConnect.Application.Interfaces.Services
         Task<List<LeaveTypeDropdownDto>> GetAvailableLeaveTypesAsync(Guid userId);
 
         Task<LeaveDashboardDto> GetDashboardAsync(Guid employeeId);
+
+        Task<List<DisabledLeaveDateDto>> GetDisabledDatesAsync(Guid userId);
     }
 }

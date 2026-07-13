@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "../../api/axiosInstance";
 import type { LeaveRequest } from "../../types";
 import { useNavigate } from "react-router-dom";
@@ -32,6 +32,8 @@ const Leaves = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const [expandedReasonId, setExpandedReasonId] = useState<string | null>(null);
+
+  const hasFetchedRef = useRef(false);
   const fetchLeaves = async () => {
     setLoading(true);
     setError("");
@@ -62,6 +64,9 @@ const Leaves = () => {
   };
 
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
     void fetchLeaves();
     void fetchAvailableLeaveTypes();
   }, []);
@@ -108,31 +113,6 @@ const Leaves = () => {
       date.getDay() === 6    // Saturday
     );
   };
-
-  // const calculateDays = () => {
-  //   if (!startDate || !endDate) return 0;
-
-  //   const startD = new Date(startDate);
-  //   const endD = new Date(endDate);
-
-  //   let days =
-  //     (endD.getTime() - startD.getTime()) /
-  //       (1000 * 60 * 60 * 24) +
-  //     1;
-
-  //   if (days <= 0) return 0;
-
-  //   if (startDate === endDate) {
-  //     if (firstHalf || secondHalf) return 0.5;
-  //     return 1;
-  //   }
-
-  //   if (firstDaySecondHalf) days -= 0.5;
-  //   if (lastDayFirstHalf) days -= 0.5;
-
-  //   return days;
-  // };
-
   const calculateDays = () => {
     if (!startDate || !endDate) return 0;
 
@@ -175,14 +155,14 @@ const Leaves = () => {
   const numberOfDays = calculateDays();
 
   const isSingleDayLeave = startDate && endDate && startDate === endDate;
-   const actualDays =
-  startDate && endDate
-    ? (new Date(endDate).getTime() - new Date(startDate).getTime()) /
-        (1000 * 60 * 60 * 24) +
+  const actualDays =
+    startDate && endDate
+      ? (new Date(endDate).getTime() - new Date(startDate).getTime()) /
+      (1000 * 60 * 60 * 24) +
       1
-    : 0;
+      : 0;
 
-const isMultiDayLeave = actualDays >= 2;
+  const isMultiDayLeave = actualDays >= 2;
 
   const handleBack = () => {
     navigate("/dashboard");
@@ -221,8 +201,20 @@ const isMultiDayLeave = actualDays >= 2;
       setLastDayFirstHalf(false);
 
       await fetchLeaves();
-    } catch {
-      setError("Failed to submit leave.");
+    } catch (err) {
+      const serverError =
+        (err as {
+          response?: {
+            data?: { message?: string; Message?: string } | string;
+          };
+        })?.response?.data;
+
+      const message =
+        typeof serverError === "string"
+          ? serverError
+          : serverError?.Message ?? serverError?.message ?? "Failed to submit leave.";
+
+      setError(message);
     } finally {
       setSubmitting(false);
     }
@@ -349,64 +341,64 @@ const isMultiDayLeave = actualDays >= 2;
         >
           {/* SINGLE DAY OPTIONS */}
           <label>
-  <input
-    type="checkbox"
-    checked={firstHalf}
-    disabled={!isSingleDayLeave}
-    onChange={(e) => {
-      if (e.target.checked) {
-        setFirstHalf(true);
-        setSecondHalf(false); 
-      } else {
-        setFirstHalf(false);
-      }
-    }}
-  />
-  First Half
-</label>
+            <input
+              type="checkbox"
+              checked={firstHalf}
+              disabled={!isSingleDayLeave}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setFirstHalf(true);
+                  setSecondHalf(false);
+                } else {
+                  setFirstHalf(false);
+                }
+              }}
+            />
+            First Half
+          </label>
 
-<label>
-  <input
-    type="checkbox"
-    checked={secondHalf}
-    disabled={!isSingleDayLeave}
-    onChange={(e) => {
-      if (e.target.checked) {
-        setSecondHalf(true);
-        setFirstHalf(false); 
-      } else {
-        setSecondHalf(false);
-      }
-    }}
-  />
-  Second Half
-</label>
+          <label>
+            <input
+              type="checkbox"
+              checked={secondHalf}
+              disabled={!isSingleDayLeave}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSecondHalf(true);
+                  setFirstHalf(false);
+                } else {
+                  setSecondHalf(false);
+                }
+              }}
+            />
+            Second Half
+          </label>
 
           {/* MULTI DAY OPTIONS */}
-          
-         <label>
-  <input
-    type="checkbox"
-    checked={firstDaySecondHalf}
-    disabled={!isMultiDayLeave}
-    onChange={(e) =>
-      setFirstDaySecondHalf(e.target.checked)
-    }
-  />
-  First Day Second Half
-</label>
 
-<label>
-  <input
-    type="checkbox"
-    checked={lastDayFirstHalf}
-    disabled={!isMultiDayLeave}
-    onChange={(e) =>
-      setLastDayFirstHalf(e.target.checked)
-    }
-  />
-  Last Day First Half
-</label>
+          <label>
+            <input
+              type="checkbox"
+              checked={firstDaySecondHalf}
+              disabled={!isMultiDayLeave}
+              onChange={(e) =>
+                setFirstDaySecondHalf(e.target.checked)
+              }
+            />
+            First Day Second Half
+          </label>
+
+          <label>
+            <input
+              type="checkbox"
+              checked={lastDayFirstHalf}
+              disabled={!isMultiDayLeave}
+              onChange={(e) =>
+                setLastDayFirstHalf(e.target.checked)
+              }
+            />
+            Last Day First Half
+          </label>
         </div>
 
         {/* DAYS */}
@@ -444,6 +436,7 @@ const isMultiDayLeave = actualDays >= 2;
                   <th className="th">Type</th>
                   <th className="th">Start Date</th>
                   <th className="th">End Date</th>
+                  <th className="th">No of Days</th>                  
                   <th className="th">Reason</th>
                   <th className="th">Status</th>
                 </tr>
@@ -462,52 +455,53 @@ const isMultiDayLeave = actualDays >= 2;
                       <td className="td">{leave.leaveType}</td>
                       <td className="td">{leave.startDate?.split("T")[0]}</td>
                       <td className="td">{leave.endDate?.split("T")[0]}</td>
-                     <td className="td">
-  {expandedReasonId === leave.id ? (
-    <>
-      {leave.reason}{" "}
-      <button
-        type="button"
-        onClick={() => setExpandedReasonId(null)}
-        style={{
-          background: "none",
-          border: "none",
-          color: "#2563eb",
-          cursor: "pointer",
-          padding: 0,
-          marginLeft: "6px",
-          textDecoration: "underline",
-        }}
-      >
-        View Less
-      </button>
-    </>
-  ) : (
-    <>
-      {leave.reason.length > 30
-        ? `${leave.reason.substring(0, 30)}...`
-        : leave.reason}
+                      <td className="td">{leave.totalDays}</td>
+                      <td className="td">
+                        {expandedReasonId === leave.id ? (
+                          <>
+                            {leave.reason}{" "}
+                            <button
+                              type="button"
+                              onClick={() => setExpandedReasonId(null)}
+                              style={{
+                                background: "none",
+                                border: "none",
+                                color: "#2563eb",
+                                cursor: "pointer",
+                                padding: 0,
+                                marginLeft: "6px",
+                                textDecoration: "underline",
+                              }}
+                            >
+                              View Less
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            {leave.reason.length > 30
+                              ? `${leave.reason.substring(0, 30)}...`
+                              : leave.reason}
 
-      {leave.reason.length > 30 && (
-        <button
-          type="button"
-          onClick={() => setExpandedReasonId(leave.id)}
-          style={{
-            background: "none",
-            border: "none",
-            color: "#2563eb",
-            cursor: "pointer",
-            padding: 0,
-            marginLeft: "6px",
-            textDecoration: "underline",
-          }}
-        >
-          View More
-        </button>
-      )}
-    </>
-  )}
-</td>
+                            {leave.reason.length > 30 && (
+                              <button
+                                type="button"
+                                onClick={() => setExpandedReasonId(leave.id)}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  color: "#2563eb",
+                                  cursor: "pointer",
+                                  padding: 0,
+                                  marginLeft: "6px",
+                                  textDecoration: "underline",
+                                }}
+                              >
+                                View More
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </td>
                       <td className="td">
                         <span className={getStatusBadgeClass(leave.status)}>
                           {leave.status}

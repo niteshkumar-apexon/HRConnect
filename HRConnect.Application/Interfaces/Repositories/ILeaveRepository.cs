@@ -13,7 +13,7 @@ namespace HRConnect.Application.Interfaces.Repositories
     public interface ILeaveRepository
     {
 
-        Task<List<LeaveRequest>> GetAllAsync();        
+        Task<List<LeaveRequest>> GetAllAsync();
 
         Task<LeaveRequest> CreateAsync(LeaveRequest leave);
 
@@ -26,6 +26,12 @@ namespace HRConnect.Application.Interfaces.Repositories
         Task<LeaveRequest?> GetByIdAsync(Guid id);
 
         Task UpdateAsync(LeaveRequest leave);
+
+        Task<bool> HasOverlappingLeaveAsync(Guid employeeId, DateTime startDate, DateTime endDate);
+
+        Task<List<LeaveRequest>> GetApprovedAndPendingLeavesAsync(Guid employeeId);
+
+        Task<List<LeaveRequest>> GetEmployeeLeavesForCalendarAsync(Guid employeeId);
 
     }
 }

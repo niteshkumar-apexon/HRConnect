@@ -132,6 +132,19 @@ namespace HRConnect.API.Controllers
             return Ok(dashboard);
         }
 
+        [Authorize]
+        [HttpGet("disabled-dates")]
+        public async Task<IActionResult> GetDisabledDates()
+        {
+            var userId = User.GetUserId();
+
+            var result =
+                await _leaveService
+                    .GetDisabledDatesAsync(userId);
+
+            return Ok(result);
+        }
+
 
     }
 }

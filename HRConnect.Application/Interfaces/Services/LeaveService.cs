@@ -56,16 +56,13 @@ namespace HRConnect.Application.Interfaces.Services
                 throw new Exception(
                     "Start date cannot be greater than end date.");
 
-            //var overlap =
-            //    await _leaveRepository
-            //        .HasOverlappingLeaveAsync(
-            //            employee.Id,
-            //            dto.StartDate,
-            //            dto.EndDate);
+            var overlap = await _leaveRepository.HasOverlappingLeaveAsync(employee.Id, dto.StartDate, dto.EndDate);
 
-            //if (overlap)
-            //    throw new Exception(
-            //        "Leave already exists for selected dates.");
+            if (overlap)
+            {
+                throw new BadRequestException(
+                    "Leave already exists for the selected dates.");
+            }
 
             var leaveDays = CalculateLeaveDays(dto); //(dto.EndDate - dto.StartDate).Days + 1;
 
@@ -335,6 +332,105 @@ namespace HRConnect.Application.Interfaces.Services
         {
             return date.DayOfWeek == DayOfWeek.Saturday ||
                    date.DayOfWeek == DayOfWeek.Sunday;
-        }        
+        }
+
+        public async Task<List<DisabledLeaveDateDto>> GetDisabledDatesAsync(Guid userId)
+        {
+            var employee =
+                await _employeeRepository
+                    .GetByUserIdAsync(userId);
+
+            if (employee == null)
+                throw new NotFoundException("Employee not found.");
+
+            var leaves =
+                await _leaveRepository
+                    .GetEmployeeLeavesForCalendarAsync(employee.Id);
+
+            var result = new List<DisabledLeaveDateDto>();
+
+            foreach (var leave in leaves)
+            {
+                // Single day leave
+                if (leave.StartDate.Date == leave.EndDate.Date)
+                {
+                    result.Add(new DisabledLeaveDateDto
+                    {
+                        Date = leave.StartDate.Date,
+
+                        FullDay =
+                            !leave.FirstHalf &&
+                            !leave.SecondHalf,
+
+                        FirstHalf = leave.FirstHalf,
+
+                        SecondHalf = leave.SecondHalf
+                    });
+
+                    continue;
+                }
+
+                // Multi-day leave
+                var current = leave.StartDate.Date;
+
+                while (current <= leave.EndDate.Date)
+                {
+                    if (current == leave.StartDate.Date)
+                    {
+                        result.Add(new DisabledLeaveDateDto
+                        {
+                            Date = current,
+
+                            FullDay =
+                                !leave.FirstDaySecondHalf,
+
+                            FirstHalf =
+                                !leave.FirstDaySecondHalf,
+
+                            SecondHalf =
+                                true
+                        });
+                    }
+                    else if (current == leave.EndDate.Date)
+                    {
+                        result.Add(new DisabledLeaveDateDto
+                        {
+                            Date = current,
+
+                            FullDay =
+                                !leave.LastDayFirstHalf,
+
+                            FirstHalf = true,
+
+                            SecondHalf =
+                                !leave.LastDayFirstHalf
+                        });
+                    }
+                    else
+                    {
+                        result.Add(new DisabledLeaveDateDto
+                        {
+                            Date = current,
+
+                            FullDay = true,
+
+                            FirstHalf = true,
+
+                            SecondHalf = true
+                        });
+                    }
+
+                    current = current.AddDays(1);
+                }
+            }
+
+            return result
+                .OrderBy(x => x.Date)
+                .ToList();
+        }
+
+
+
+
     }
 }

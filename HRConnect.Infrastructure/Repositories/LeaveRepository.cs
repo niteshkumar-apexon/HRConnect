@@ -131,5 +131,38 @@ namespace HRConnect.Infrastructure.Repositories
         {
             return await _context.LeaveRequests.CountAsync(x => x.Status == status);
         }
+
+        public async Task<bool> HasOverlappingLeaveAsync(Guid employeeId, DateTime startDate, DateTime endDate)
+        {
+            return await _context.LeaveRequests
+                .AnyAsync(x =>
+                    x.EmployeeId == employeeId &&
+                    (x.Status == "Pending" ||
+                     x.Status == "Approved") &&
+
+                    startDate <= x.EndDate &&
+                    endDate >= x.StartDate);
+        }
+
+        public async Task<List<LeaveRequest>> GetApprovedAndPendingLeavesAsync(Guid employeeId)
+        {
+            return await _context.LeaveRequests
+                .Where(x =>
+                    x.EmployeeId == employeeId &&
+                    (x.Status == "Pending" ||
+                     x.Status == "Approved"))
+                .ToListAsync();
+        }
+
+        public async Task<List<LeaveRequest>> GetEmployeeLeavesForCalendarAsync(Guid employeeId)
+        {
+            return await _context.LeaveRequests
+                .Where(x =>
+                    x.EmployeeId == employeeId &&
+                    (x.Status == "Pending" ||
+                     x.Status == "Approved"))
+                .OrderBy(x => x.StartDate)
+                .ToListAsync();
+        }
     }
 }
