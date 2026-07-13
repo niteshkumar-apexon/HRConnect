@@ -369,6 +369,12 @@ const Admin = () => {
     return `badge ${map[status] || "badgePending"}`;
   };
 
+  const formatDate = (date?: string) => {
+    if (!date) return "";
+    const [year, month, day] = date.split("T")[0].split("-");
+    return `${day}-${month}-${year}`;
+  };
+
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -624,7 +630,7 @@ const Admin = () => {
                         <td className="td">{emp.fullName}</td>
                         <td className="td">{emp.department}</td>
                         <td className="td">{emp.designation}</td>
-                        <td className="td">{emp.joiningDate?.split("T")[0]}</td>
+                        <td className="td">{formatDate(emp.joiningDate)}</td>
                         <td className="td">
                           <button
                             className="btn btnGhost"
@@ -743,8 +749,8 @@ const Admin = () => {
                       <tr key={leave.id}>
                         <td className="td">{leave.employeeName || leave.employeeId}</td>
                         <td className="td">{leave.leaveType}</td>
-                        <td className="td">{leave.startDate?.split("T")[0]}</td>
-                        <td className="td">{leave.endDate?.split("T")[0]}</td>
+                        <td className="td">{formatDate(leave.startDate)}</td>
+                        <td className="td">{formatDate(leave.endDate)}</td>
                         <td className="td">{leave.totalDays}</td>
                         <td className="td">
                           <span className={getStatusBadge(leave.status)}>
