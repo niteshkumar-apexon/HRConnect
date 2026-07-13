@@ -1,6 +1,6 @@
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "../../api/axiosInstance";
 import type { LeaveRequest } from "../../types";
 
@@ -36,12 +36,17 @@ const Dashboard = () => {
   const [activeFilter, setActiveFilter] = useState("All");
   const [cancellingLeaveId, setCancellingLeaveId] = useState<string | null>(null);
 
+  const hasFetchedRef = useRef(false);
+
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
     const fetchData = async () => {
       setLoading(true);
       try {
