@@ -316,9 +316,9 @@ const Admin = () => {
   };
 
   const isAddEmployeeFormValid =
-  newEmployee.userId.trim() !== "" &&
-  newEmployee.department.trim() !== "" &&
-  newEmployee.designation.trim() !== "" &&
+  !!newEmployee.userId?.trim() &&
+  !!newEmployee.department?.trim() &&
+  !!newEmployee.designation?.trim() &&
   newEmployee.joiningDate !== "" &&
   new Date(newEmployee.joiningDate) <= new Date();
   const handleAddEmployee = async () => {
